@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Echo</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="A rhythm that learns you... then betrays you.">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ================= AUDIO UNLOCK OVERLAY ================= -->
+  <div id="audio-overlay">
+    <div id="overlay-inner">
+      <div id="overlay-title">ECHO</div>
+      <div id="overlay-sub">tap anywhere to begin</div>
+      <div id="overlay-best"></div>
+      <div id="overlay-hint">a rhythm that learns you</div>
+    </div>
+  </div>
+
+  <!-- ================= APP ROOT ================= -->
+  <div id="app">
+
+    <!-- ================= BACKGROUND ================= -->
+    <div id="background">
+      <div id="vignette"></div>
+      <div id="grid-lines"></div>
+    </div>
+
+    <!-- ================= HUD (TOP LEFT) ================= -->
+    <div id="hud">
+      <div class="stat">
+        <div class="label">STREAK</div>
+        <div id="streak" class="value">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">ACCURACY</div>
+        <div id="accuracy" class="value">–</div>
+      </div>
+      <div class="stat">
+        <div class="label">BEST</div>
+        <div id="best" class="value">0</div>
+      </div>
+    </div>
+
+    <!-- ================= DIFFICULTY LABEL (TOP CENTER) ================= -->
+    <div id="diff-label-wrap">
+      <div id="diff-label"></div>
+    </div>
+
+    <!-- ================= FAKE CHAT (RIGHT SIDE) ================= -->
+    <div id="chat-layer">
+      <div id="chat-title">LIVE</div>
+      <div id="chat"></div>
+    </div>
+
+    <!-- ================= LEADERBOARD ================= -->
+    <div id="leaderboard-layer">
+      <div id="leaderboard-title">SYNC BOARD</div>
+      <div id="leaderboard"></div>
+    </div>
+
+    <!-- ================= MAIN GAME AREA ================= -->
+    <div id="game">
+      <div id="center">
+        <div id="ring-outer"></div>
+        <!-- timing ring — shrinks inward to show beat timing -->
+        <div id="timing-ring"></div>
+        <div id="ring"></div>
+        <div id="circle"></div>
+        <div id="feedback">—</div>
+      </div>
+    </div>
+
+    <!-- ================= PHASE MESSAGE ================= -->
+    <div id="message-layer">
+      <div id="message"></div>
+    </div>
+
+    <!-- ================= FLOW BAR ================= -->
+    <div id="flow-bar-wrap">
+      <div id="flow-label">FLOW</div>
+      <div id="flow-track">
+        <div id="flow-fill"></div>
+      </div>
+    </div>
+
+    <!-- ================= END SCREEN ================= -->
+    <div id="end-screen" class="hidden">
+      <div id="end-content">
+        <div id="end-title">we were close.</div>
+        <div id="end-sub">you can try again.</div>
+        <div id="end-stats">
+          <span id="end-accuracy">–</span>
+          <span id="end-best">–</span>
+        </div>
+        <button id="retry-btn">[ retry ]</button>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+
+  <script type="module" src="src/main.js"></script>
+
+</body>
+</html>

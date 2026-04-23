@@ -1,0 +1,608 @@
+/* ================= VARIABLES ================= */
+:root {
+  --bg:        #04060a;
+  --fg:        #ddeeff;
+  --accent:    #00ffe0;
+  --accent2:   #ff2d78;
+  --mid:       #4a6a80;
+  --dim:       rgba(255,255,255,0.07);
+  --glow-cyan: 0 0 20px rgba(0,255,224,0.6), 0 0 60px rgba(0,255,224,0.25);
+  --glow-pink: 0 0 20px rgba(255,45,120,0.6), 0 0 60px rgba(255,45,120,0.25);
+  --font-main: 'Orbitron', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+/* ================= RESET ================= */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ================= BASE ================= */
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-main);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  cursor: crosshair;
+  user-select: none;
+}
+
+/* scanlines */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.1) 3px,
+    rgba(0,0,0,0.1) 4px
+  );
+  pointer-events: none;
+  z-index: 900;
+}
+
+/* ================= AUDIO OVERLAY ================= */
+#audio-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-direction: column;
+}
+
+#overlay-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+#overlay-title {
+  font-family: var(--font-main);
+  font-size: clamp(4rem, 14vw, 9rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-shadow: var(--glow-cyan);
+  animation: titlePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { opacity: 1; text-shadow: var(--glow-cyan); }
+  50% { opacity: 0.7; text-shadow: 0 0 40px rgba(0,255,224,0.8), 0 0 100px rgba(0,255,224,0.3); }
+}
+
+#overlay-sub {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.3em;
+  color: var(--fg);
+  opacity: 0.5;
+  animation: blink 1.4s step-end infinite;
+}
+
+#overlay-hint {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--mid);
+  opacity: 0.4;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0; }
+}
+
+/* ================= APP ROOT ================= */
+#app {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* ================= BACKGROUND ================= */
+#background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.85) 100%);
+}
+
+#grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,224,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,224,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ================= GAME AREA ================= */
+#game {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+#center {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 260px;
+  height: 260px;
+}
+
+/* ================= RINGS ================= */
+#ring-outer {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,224,0.08);
+  transition: transform 0.3s ease, opacity 0.3s;
+}
+
+#ring {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,255,224,0.25);
+  box-shadow:
+    0 0 18px rgba(0,255,224,0.2),
+    inset 0 0 18px rgba(0,255,224,0.05);
+  transition: transform 0.12s ease-out, opacity 0.15s, box-shadow 0.15s;
+}
+
+.ring-pulse {
+  transform: scale(1.15) !important;
+  opacity: 0.6 !important;
+  box-shadow:
+    0 0 40px rgba(0,255,224,0.5),
+    inset 0 0 20px rgba(0,255,224,0.1) !important;
+}
+
+/* ================= CIRCLE ================= */
+#circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #00ffe0 0%, #0044aa 50%, #000820 100%);
+  box-shadow:
+    0 0 30px rgba(0,255,224,0.4),
+    0 0 80px rgba(0,100,255,0.2),
+    inset 0 0 30px rgba(0,0,0,0.4);
+  transition: transform 0.07s linear, box-shadow 0.12s ease;
+  position: relative;
+  z-index: 3;
+}
+
+.pulse {
+  transform: scale(1.18) !important;
+}
+
+/* hit flash states */
+.hit-perfect {
+  box-shadow:
+    0 0 50px rgba(0,255,200,0.9),
+    0 0 120px rgba(0,255,200,0.4),
+    inset 0 0 30px rgba(0,255,200,0.2) !important;
+}
+
+.hit-good {
+  box-shadow:
+    0 0 35px rgba(0,160,255,0.8),
+    0 0 80px rgba(0,160,255,0.3),
+    inset 0 0 20px rgba(0,160,255,0.1) !important;
+}
+
+.hit-miss {
+  box-shadow:
+    0 0 30px rgba(255,30,80,0.8),
+    0 0 70px rgba(255,30,80,0.3),
+    inset 0 0 20px rgba(255,30,80,0.1) !important;
+}
+
+/* ================= FEEDBACK TEXT ================= */
+#feedback {
+  position: absolute;
+  top: calc(50% + 95px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.55;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+  z-index: 4;
+}
+
+/* ================= HUD ================= */
+#hud {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--mid);
+  opacity: 0.7;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* ================= CHAT ================= */
+#chat-layer {
+  position: absolute;
+  top: 28px;
+  right: 24px;
+  width: 190px;
+  text-align: right;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#chat-title {
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--accent2);
+  opacity: 0.6;
+}
+
+#chat {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: var(--fg);
+  opacity: 0.45;
+}
+
+#chat div {
+  animation: chatFade 0.3s ease;
+}
+
+@keyframes chatFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= LEADERBOARD ================= */
+#leaderboard-layer {
+  position: absolute;
+  bottom: 70px;
+  right: 24px;
+  text-align: right;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#leaderboard-title {
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  opacity: 0.5;
+}
+
+#leaderboard {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: var(--fg);
+  opacity: 0.5;
+}
+
+/* ================= MESSAGE ================= */
+#message-layer {
+  position: absolute;
+  bottom: 28px;
+  width: 100%;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#message {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  color: var(--fg);
+  opacity: 0.35;
+}
+
+/* ================= FLOW BAR ================= */
+#flow-bar-wrap {
+  position: absolute;
+  bottom: 28px;
+  left: 28px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#flow-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--mid);
+  opacity: 0.6;
+}
+
+#flow-track {
+  width: 80px;
+  height: 3px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#flow-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #00ccff);
+  border-radius: 2px;
+  transition: width 0.4s ease, background 0.4s;
+  box-shadow: 0 0 8px rgba(0,255,224,0.6);
+}
+
+/* ================= END SCREEN ================= */
+#end-screen {
+  position: absolute;
+  inset: 0;
+  background: rgba(4,6,10,0.96);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 500;
+  animation: endFadeIn 0.6s ease;
+}
+
+@keyframes endFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hidden {
+  display: none !important;
+}
+
+#end-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+#end-title {
+  font-size: clamp(1.5rem, 5vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--fg);
+}
+
+#end-sub {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: var(--mid);
+}
+
+#end-stats {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  opacity: 0.7;
+  display: flex;
+  gap: 24px;
+}
+
+#retry-btn {
+  margin-top: 8px;
+  padding: 12px 32px;
+  background: transparent;
+  border: 1px solid rgba(0,255,224,0.4);
+  color: var(--accent);
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+#retry-btn:hover {
+  background: rgba(0,255,224,0.08);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(0,255,224,0.2);
+}
+
+/* ================= GLITCH ================= */
+.glitch {
+  animation: glitchAnim 0.18s steps(2) forwards;
+}
+
+@keyframes glitchAnim {
+  0%   { transform: translate(3px, -2px) skewX(1deg); filter: hue-rotate(20deg); }
+  33%  { transform: translate(-3px, 2px) skewX(-1deg); filter: hue-rotate(-20deg); }
+  66%  { transform: translate(2px, 1px); filter: hue-rotate(10deg); }
+  100% { transform: translate(0, 0); filter: none; }
+}
+
+/* ================= DISTORT ================= */
+.distort {
+  animation: distortAnim 0.22s ease forwards;
+}
+
+@keyframes distortAnim {
+  0%   { filter: blur(0px) brightness(1); }
+  40%  { filter: blur(3px) brightness(1.3); }
+  100% { filter: blur(0px) brightness(1); }
+}
+
+/* ================= TIMING RING ================= */
+#timing-ring {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,255,224,0.7);
+  box-shadow: 0 0 12px rgba(0,255,224,0.4), inset 0 0 8px rgba(0,255,224,0.1);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 2;
+  /* position/size driven by JS — no CSS transition so JS rAF is smooth */
+}
+
+/* ================= DIFFICULTY LABEL ================= */
+#diff-label-wrap {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+}
+
+#diff-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  color: var(--accent);
+  opacity: 0;
+}
+
+.diff-pop {
+  animation: diffPop 1.8s ease forwards !important;
+}
+
+@keyframes diffPop {
+  0%   { opacity: 0; transform: translateY(-6px); }
+  15%  { opacity: 0.9; transform: translateY(0); }
+  70%  { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+/* ================= OVERLAY BEST SCORE ================= */
+#overlay-best {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  opacity: 0.55;
+  min-height: 1.2em;
+}
+
+/* ================= MOBILE RESPONSIVE ================= */
+@media (max-width: 480px) {
+  #hud {
+    top: 16px;
+    left: 16px;
+    gap: 12px;
+  }
+
+  .value {
+    font-size: 1.2rem;
+  }
+
+  #chat-layer {
+    display: none; /* hide chat on small screens — not enough room */
+  }
+
+  #leaderboard-layer {
+    bottom: 60px;
+    right: 14px;
+    font-size: 0.65rem;
+  }
+
+  #center {
+    width: 200px;
+    height: 200px;
+  }
+
+  #ring-outer {
+    width: 200px;
+    height: 200px;
+  }
+
+  #ring {
+    width: 160px;
+    height: 160px;
+  }
+
+  #circle {
+    width: 110px;
+    height: 110px;
+  }
+
+  #timing-ring {
+    width: 200px;
+    height: 200px;
+  }
+
+  #feedback {
+    top: calc(50% + 75px);
+    font-size: 0.65rem;
+  }
+
+  #flow-bar-wrap {
+    bottom: 16px;
+    left: 16px;
+  }
+
+  #message-layer {
+    bottom: 16px;
+  }
+
+  #diff-label-wrap {
+    top: 16px;
+  }
+}
