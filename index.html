@@ -6,12 +6,12 @@
   <title>Echo</title>
   <meta name="theme-color" content="#000000">
   <meta name="description" content="A rhythm that learns you... then betrays you.">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- ================= AUDIO UNLOCK OVERLAY ================= -->
+  <!-- AUDIO OVERLAY -->
   <div id="audio-overlay">
     <div id="overlay-inner">
       <div id="overlay-title">ECHO</div>
@@ -21,53 +21,68 @@
     </div>
   </div>
 
-  <!-- ================= APP ROOT ================= -->
   <div id="app">
 
-    <!-- ================= BACKGROUND ================= -->
+    <!-- BACKGROUND -->
     <div id="background">
       <div id="vignette"></div>
       <div id="grid-lines"></div>
+      <canvas id="particle-canvas"></canvas>
     </div>
 
-    <!-- ================= HUD (TOP LEFT) ================= -->
+    <!-- ═══════════ TOP STRIP ═══════════ -->
+    <!-- HUD: top-left -->
     <div id="hud">
       <div class="stat">
         <div class="label">STREAK</div>
         <div id="streak" class="value">0</div>
       </div>
       <div class="stat">
+        <div class="label">BEST</div>
+        <div id="best" class="value">0</div>
+      </div>
+      <div class="stat">
         <div class="label">ACCURACY</div>
         <div id="accuracy" class="value">–</div>
       </div>
       <div class="stat">
-        <div class="label">BEST</div>
-        <div id="best" class="value">0</div>
+        <div class="label">SPEED</div>
+        <div id="click-speed" class="value speed-val">–</div>
       </div>
     </div>
 
-    <!-- ================= DIFFICULTY LABEL (TOP CENTER) ================= -->
+    <!-- Diff label: top-center -->
     <div id="diff-label-wrap">
       <div id="diff-label"></div>
     </div>
 
-    <!-- ================= FAKE CHAT (RIGHT SIDE) ================= -->
+    <!-- Chat: top-right -->
     <div id="chat-layer">
       <div id="chat-title">LIVE</div>
       <div id="chat"></div>
     </div>
 
-    <!-- ================= LEADERBOARD ================= -->
+    <!-- ═══════════ LEFT SIDE ═══════════ -->
+    <!-- Flow bar: left, vertically centered -->
+    <div id="flow-bar-wrap">
+      <div id="flow-label">FLOW</div>
+      <div id="flow-track">
+        <div id="flow-fill"></div>
+      </div>
+      <div id="flow-pct">0%</div>
+    </div>
+
+    <!-- ═══════════ RIGHT SIDE ═══════════ -->
+    <!-- Leaderboard: right, vertically centered -->
     <div id="leaderboard-layer">
       <div id="leaderboard-title">SYNC BOARD</div>
       <div id="leaderboard"></div>
     </div>
 
-    <!-- ================= MAIN GAME AREA ================= -->
+    <!-- ═══════════ CENTER ═══════════ -->
     <div id="game">
       <div id="center">
         <div id="ring-outer"></div>
-        <!-- timing ring — shrinks inward to show beat timing -->
         <div id="timing-ring"></div>
         <div id="ring"></div>
         <div id="circle"></div>
@@ -75,20 +90,81 @@
       </div>
     </div>
 
-    <!-- ================= PHASE MESSAGE ================= -->
+    <!-- Combo burst: floats above circle -->
+    <div id="combo-burst"></div>
+
+    <!-- Phase message: just below center -->
     <div id="message-layer">
       <div id="message"></div>
     </div>
 
-    <!-- ================= FLOW BAR ================= -->
-    <div id="flow-bar-wrap">
-      <div id="flow-label">FLOW</div>
-      <div id="flow-track">
-        <div id="flow-fill"></div>
-      </div>
+    <!-- ═══════════ BOTTOM-LEFT: FACT STRIP ═══════════ -->
+    <!-- Anchored to bottom-left, width ~40%, does NOT touch right side -->
+    <div id="fact-strip">
+      <button id="fact-btn" title="New fact">⟳</button>
+      <div id="fact-text">loading transmission...</div>
     </div>
 
-    <!-- ================= END SCREEN ================= -->
+    <!-- ═══════════ BOTTOM-RIGHT: NAV PILLS ═══════════ -->
+    <!-- Floating pill nav anchored to bottom-right, does NOT touch left side -->
+    <nav id="bottom-nav">
+      <button class="nav-btn nav-active" id="nav-play">
+        <span class="nav-icon">◈</span>
+        <span class="nav-label">PLAY</span>
+      </button>
+      <button class="nav-btn" id="nav-tutorial">
+        <span class="nav-icon">◎</span>
+        <span class="nav-label">HOW</span>
+      </button>
+      <button class="nav-btn" id="nav-about">
+        <span class="nav-icon">◇</span>
+        <span class="nav-label">INFO</span>
+      </button>
+    </nav>
+
+    <!-- ═══════════ PANEL (slides up from bottom-right nav) ═══════════ -->
+    <div id="panel-wrap" class="hidden panel-animate">
+
+      <div id="panel-tutorial" class="panel hidden">
+        <div class="panel-header">// HOW TO PLAY</div>
+        <div class="panel-body">
+          <div class="tut-step"><div class="tut-num">01</div><div class="tut-text"><strong>watch the ring</strong> — it shrinks toward the circle. That's your beat cue.</div></div>
+          <div class="tut-step"><div class="tut-num">02</div><div class="tut-text"><strong>tap</strong> when the ring reaches the circle. Closer = higher rating.</div></div>
+          <div class="tut-step"><div class="tut-num">03</div><div class="tut-text"><strong>perfect</strong> &lt;90ms · <strong>good</strong> &lt;210ms · otherwise <strong>miss</strong>.</div></div>
+          <div class="tut-step"><div class="tut-num">04</div><div class="tut-text"><strong>flow</strong> rises with hits, drops on misses. High flow = faster beats + tighter windows.</div></div>
+          <div class="tut-step"><div class="tut-num">05</div><div class="tut-text"><strong>streak 20</strong> = win. Too many misses = echo fades.</div></div>
+          <div class="tut-step"><div class="tut-num">✦</div><div class="tut-text">5 perfects in a row triggers a <strong>combo burst</strong>.</div></div>
+          <div class="tut-step"><div class="tut-num">★</div><div class="tut-text"><strong>⟳</strong> bottom-left = random fact mid-game.</div></div>
+        </div>
+      </div>
+
+      <div id="panel-about" class="panel hidden">
+        <div class="panel-header">// ABOUT</div>
+        <div class="panel-body">
+          <div class="about-title">ECHO</div>
+          <div class="about-sub">a rhythm that learns you... then betrays you.</div>
+          <div class="about-section">
+            <div class="about-label">WHAT</div>
+            <div class="about-text">Minimalist rhythm game — vanilla JS, Web Audio API, zero libraries. Every sound is synthesised live in your browser.</div>
+          </div>
+          <div class="about-section">
+            <div class="about-label">DIFFICULTY</div>
+            <div class="about-text">5 tiers: SYNC I → OVERLOAD. Flow state drives speed and timing window size. It adapts to you.</div>
+          </div>
+          <div class="about-section">
+            <div class="about-label">FACT STRIP</div>
+            <div class="about-text">Pulls live facts from the Useless Facts API. Offline? Falls back to built-in set silently.</div>
+          </div>
+          <div class="about-section">
+            <div class="about-label">STACK</div>
+            <div class="about-text">HTML · CSS · Vanilla JS · Web Audio API</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- END SCREEN -->
     <div id="end-screen" class="hidden">
       <div id="end-content">
         <div id="end-title">we were close.</div>
@@ -101,9 +177,51 @@
       </div>
     </div>
 
-  </div><!-- /#app -->
+  </div>
 
   <script type="module" src="src/main.js"></script>
+
+  <!-- Particle background -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("particle-canvas");
+      const ctx    = canvas.getContext("2d");
+      let W, H, particles = [];
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function rand(a, b) { return a + Math.random() * (b - a); }
+
+      function initParticles() {
+        particles = Array.from({ length: 38 }, () => ({
+          x: rand(0, W), y: rand(0, H),
+          vx: rand(-0.15, 0.15), vy: rand(-0.18, -0.04),
+          r: rand(0.5, 1.8), alpha: rand(0.04, 0.18),
+        }));
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (const p of particles) {
+          p.x += p.vx; p.y += p.vy;
+          if (p.y < -4) { p.y = H + 4; p.x = rand(0, W); }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,255,224,${p.alpha})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      resize();
+      initParticles();
+      draw();
+      window.addEventListener("resize", () => { resize(); initParticles(); });
+    });
+  </script>
 
 </body>
 </html>

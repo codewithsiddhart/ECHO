@@ -10,14 +10,16 @@
   --glow-pink: 0 0 20px rgba(255,45,120,0.6), 0 0 60px rgba(255,45,120,0.25);
   --font-main: 'Orbitron', sans-serif;
   --font-mono: 'Share Tech Mono', monospace;
+
+  /* Layout zones — single source of truth */
+  --nav-h:      52px;   /* bottom nav pill height */
+  --fact-h:     38px;   /* fact strip height */
+  --top-h:      28px;   /* top clearance */
+  --side-pad:   22px;   /* left/right padding for side widgets */
 }
 
 /* ================= RESET ================= */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* ================= BASE ================= */
 body {
@@ -31,17 +33,15 @@ body {
   user-select: none;
 }
 
-/* scanlines */
+/* scanlines overlay */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   background: repeating-linear-gradient(
     0deg,
-    transparent,
-    transparent 3px,
-    rgba(0,0,0,0.1) 3px,
-    rgba(0,0,0,0.1) 4px
+    transparent, transparent 3px,
+    rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px
   );
   pointer-events: none;
   z-index: 900;
@@ -51,7 +51,7 @@ body::after {
 #audio-overlay {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: radial-gradient(ellipse at center, #060d18 0%, #04060a 100%);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -65,44 +65,53 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 #overlay-title {
   font-family: var(--font-main);
   font-size: clamp(4rem, 14vw, 9rem);
-  font-weight: 700;
-  letter-spacing: 0.3em;
+  font-weight: 900;
+  letter-spacing: 0.35em;
   color: var(--accent);
   text-shadow: var(--glow-cyan);
   animation: titlePulse 2.5s ease-in-out infinite;
 }
 
 @keyframes titlePulse {
-  0%, 100% { opacity: 1; text-shadow: var(--glow-cyan); }
-  50% { opacity: 0.7; text-shadow: 0 0 40px rgba(0,255,224,0.8), 0 0 100px rgba(0,255,224,0.3); }
+  0%,100% { opacity:1; text-shadow: var(--glow-cyan); }
+  50%     { opacity:0.75; text-shadow: 0 0 50px rgba(0,255,224,0.9), 0 0 120px rgba(0,255,224,0.35); }
 }
 
 #overlay-sub {
   font-family: var(--font-mono);
   font-size: 0.85rem;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.32em;
   color: var(--fg);
   opacity: 0.5;
   animation: blink 1.4s step-end infinite;
 }
 
-#overlay-hint {
+#overlay-best {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  opacity: 0.5;
+  min-height: 1.1em;
+}
+
+#overlay-hint {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
   color: var(--mid);
-  opacity: 0.4;
+  opacity: 0.38;
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0; }
+  0%,100% { opacity:0.5; }
+  50%     { opacity:0; }
 }
 
 /* ================= APP ROOT ================= */
@@ -123,19 +132,208 @@ body::after {
 #vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.85) 100%);
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.9) 100%);
 }
 
 #grid-lines {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(0,255,224,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,224,0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
+    linear-gradient(rgba(0,255,224,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,224,0.025) 1px, transparent 1px);
+  background-size: 55px 55px;
 }
 
-/* ================= GAME AREA ================= */
+/* animated particle canvas */
+#particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+}
+
+/* ================= HUD — top-left ================= */
+#hud {
+  position: absolute;
+  top: var(--top-h);
+  left: var(--side-pad);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.label {
+  font-size: 0.48rem;
+  letter-spacing: 0.32em;
+  color: var(--mid);
+  opacity: 0.75;
+}
+
+.value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+/* click speed value — colour set by JS */
+.speed-val {
+  font-size: 1.1rem;
+  transition: color 0.25s ease;
+}
+
+/* ================= DIFF LABEL — top-center ================= */
+#diff-label-wrap {
+  position: absolute;
+  top: var(--top-h);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+  text-align: center;
+}
+
+#diff-label {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.42em;
+  color: var(--accent);
+  opacity: 0;
+  text-shadow: var(--glow-cyan);
+}
+
+.diff-pop {
+  animation: diffPop 2.2s ease forwards !important;
+}
+
+@keyframes diffPop {
+  0%   { opacity:0;   transform:translateY(-6px); }
+  12%  { opacity:1;   transform:translateY(0); }
+  70%  { opacity:0.7; }
+  100% { opacity:0; }
+}
+
+/* ================= CHAT — top-right ================= */
+#chat-layer {
+  position: absolute;
+  top: var(--top-h);
+  right: var(--side-pad);
+  width: 180px;
+  text-align: right;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#chat-title {
+  font-size: 0.48rem;
+  letter-spacing: 0.32em;
+  color: var(--accent2);
+  opacity: 0.6;
+}
+
+#chat {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.75;
+  color: var(--fg);
+  opacity: 0.42;
+}
+
+#chat div { animation: chatFade 0.3s ease; }
+
+@keyframes chatFade {
+  from { opacity:0; transform:translateY(5px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ================= FLOW BAR — left side, vertically centered ================= */
+#flow-bar-wrap {
+  position: absolute;
+  left: var(--side-pad);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+#flow-label {
+  font-size: 0.48rem;
+  letter-spacing: 0.32em;
+  color: var(--mid);
+  opacity: 0.65;
+}
+
+#flow-track {
+  width: 4px;
+  height: 120px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+#flow-fill {
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(180deg, #00ccff, #00ffe0);
+  border-radius: 2px;
+  transition: height 0.4s ease, background 0.4s;
+  box-shadow: 0 0 10px rgba(0,255,224,0.7);
+}
+
+#flow-pct {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  color: var(--accent);
+  opacity: 0.5;
+  letter-spacing: 0.1em;
+}
+
+/* ================= LEADERBOARD — right side, vertically centered ================= */
+#leaderboard-layer {
+  position: absolute;
+  right: var(--side-pad);
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: right;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#leaderboard-title {
+  font-size: 0.48rem;
+  letter-spacing: 0.32em;
+  color: var(--accent);
+  opacity: 0.45;
+}
+
+#leaderboard {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.9;
+  color: var(--fg);
+  opacity: 0.48;
+}
+
+/* ================= GAME AREA — center ================= */
 #game {
   position: absolute;
   inset: 0;
@@ -161,7 +359,7 @@ body::after {
   width: 260px;
   height: 260px;
   border-radius: 50%;
-  border: 1px solid rgba(0,255,224,0.08);
+  border: 1px solid rgba(0,255,224,0.1);
   transition: transform 0.3s ease, opacity 0.3s;
 }
 
@@ -170,19 +368,33 @@ body::after {
   width: 210px;
   height: 210px;
   border-radius: 50%;
-  border: 1.5px solid rgba(0,255,224,0.25);
+  border: 1.5px solid rgba(0,255,224,0.28);
   box-shadow:
-    0 0 18px rgba(0,255,224,0.2),
-    inset 0 0 18px rgba(0,255,224,0.05);
+    0 0 22px rgba(0,255,224,0.22),
+    inset 0 0 22px rgba(0,255,224,0.06);
   transition: transform 0.12s ease-out, opacity 0.15s, box-shadow 0.15s;
 }
 
 .ring-pulse {
-  transform: scale(1.15) !important;
-  opacity: 0.6 !important;
+  transform: scale(1.16) !important;
+  opacity: 0.65 !important;
   box-shadow:
-    0 0 40px rgba(0,255,224,0.5),
-    inset 0 0 20px rgba(0,255,224,0.1) !important;
+    0 0 50px rgba(0,255,224,0.55),
+    inset 0 0 24px rgba(0,255,224,0.12) !important;
+}
+
+/* ================= TIMING RING ================= */
+/* size + opacity driven entirely by JS rAF — no CSS transition */
+#timing-ring {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,255,224,0.8);
+  box-shadow: 0 0 16px rgba(0,255,224,0.4), inset 0 0 10px rgba(0,255,224,0.1);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 2;
 }
 
 /* ================= CIRCLE ================= */
@@ -190,159 +402,94 @@ body::after {
   width: 150px;
   height: 150px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #00ffe0 0%, #0044aa 50%, #000820 100%);
+  background: radial-gradient(circle at 38% 32%,
+    #00ffe0 0%,
+    #0066cc 40%,
+    #002055 70%,
+    #000820 100%);
   box-shadow:
-    0 0 30px rgba(0,255,224,0.4),
-    0 0 80px rgba(0,100,255,0.2),
-    inset 0 0 30px rgba(0,0,0,0.4);
+    0 0 35px rgba(0,255,224,0.45),
+    0 0 90px rgba(0,100,255,0.22),
+    inset 0 0 35px rgba(0,0,0,0.5);
   transition: transform 0.07s linear, box-shadow 0.12s ease;
   position: relative;
   z-index: 3;
 }
 
-.pulse {
-  transform: scale(1.18) !important;
-}
+.pulse { transform: scale(1.19) !important; }
 
-/* hit flash states */
 .hit-perfect {
   box-shadow:
-    0 0 50px rgba(0,255,200,0.9),
-    0 0 120px rgba(0,255,200,0.4),
-    inset 0 0 30px rgba(0,255,200,0.2) !important;
+    0 0 55px rgba(0,255,200,0.95),
+    0 0 130px rgba(0,255,200,0.45),
+    inset 0 0 35px rgba(0,255,200,0.22) !important;
 }
 
 .hit-good {
   box-shadow:
-    0 0 35px rgba(0,160,255,0.8),
-    0 0 80px rgba(0,160,255,0.3),
-    inset 0 0 20px rgba(0,160,255,0.1) !important;
+    0 0 38px rgba(0,160,255,0.85),
+    0 0 90px rgba(0,160,255,0.32),
+    inset 0 0 22px rgba(0,160,255,0.12) !important;
 }
 
 .hit-miss {
   box-shadow:
-    0 0 30px rgba(255,30,80,0.8),
-    0 0 70px rgba(255,30,80,0.3),
-    inset 0 0 20px rgba(255,30,80,0.1) !important;
+    0 0 32px rgba(255,30,80,0.85),
+    0 0 80px rgba(255,30,80,0.32),
+    inset 0 0 22px rgba(255,30,80,0.12) !important;
 }
 
-/* ================= FEEDBACK TEXT ================= */
+/* ================= FEEDBACK ================= */
 #feedback {
   position: absolute;
-  top: calc(50% + 95px);
+  top: calc(50% + 98px);
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.25em;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--fg);
-  opacity: 0.55;
+  opacity: 0.5;
   white-space: nowrap;
   transition: opacity 0.2s;
   z-index: 4;
 }
 
-/* ================= HUD ================= */
-#hud {
+/* ================= COMBO BURST ================= */
+#combo-burst {
   position: absolute;
-  top: 28px;
-  left: 28px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.label {
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  color: var(--mid);
-  opacity: 0.7;
-}
-
-.value {
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: var(--fg);
-  letter-spacing: 0.05em;
-  line-height: 1;
-}
-
-/* ================= CHAT ================= */
-#chat-layer {
-  position: absolute;
-  top: 28px;
-  right: 24px;
-  width: 190px;
-  text-align: right;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-#chat-title {
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  color: var(--accent2);
-  opacity: 0.6;
-}
-
-#chat {
+  /* sits above the circle — game is centered so we use fixed positioning from center */
+  top: calc(50% - 168px);
+  left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  line-height: 1.7;
-  color: var(--fg);
-  opacity: 0.45;
+  letter-spacing: 0.32em;
+  color: var(--accent2);
+  text-shadow: var(--glow-pink);
+  white-space: nowrap;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
 }
 
-#chat div {
-  animation: chatFade 0.3s ease;
+.combo-pop {
+  animation: comboPop 1.15s cubic-bezier(0.22,1,0.36,1) forwards !important;
 }
 
-@keyframes chatFade {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ================= LEADERBOARD ================= */
-#leaderboard-layer {
-  position: absolute;
-  bottom: 70px;
-  right: 24px;
-  text-align: right;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-#leaderboard-title {
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  opacity: 0.5;
-}
-
-#leaderboard {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  line-height: 1.8;
-  color: var(--fg);
-  opacity: 0.5;
+@keyframes comboPop {
+  0%   { opacity:0;    transform:translateX(-50%) scale(0.7)  translateY(10px); }
+  18%  { opacity:1;    transform:translateX(-50%) scale(1.1)  translateY(0); }
+  65%  { opacity:0.85; }
+  100% { opacity:0;    transform:translateX(-50%) scale(1)    translateY(-14px); }
 }
 
 /* ================= MESSAGE ================= */
 #message-layer {
   position: absolute;
-  bottom: 28px;
+  /* sits just below the game circle — game center is ~50%, circle radius ~75px */
+  top: calc(50% + 145px);
   width: 100%;
   text-align: center;
   z-index: 10;
@@ -351,46 +498,194 @@ body::after {
 
 #message {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.25em;
+  font-size: 0.72rem;
+  letter-spacing: 0.26em;
   color: var(--fg);
-  opacity: 0.35;
+  opacity: 0.32;
 }
 
-/* ================= FLOW BAR ================= */
-#flow-bar-wrap {
+/* ================= FACT STRIP — bottom-left ================= */
+/*
+  Anchored bottom-left. Max-width ~42vw so it never touches the right-side nav.
+  Height is var(--fact-h). Flow bar is on the left side vertically centered,
+  so it won't collide with this.
+*/
+#fact-strip {
   position: absolute;
-  bottom: 28px;
-  left: 28px;
-  z-index: 10;
+  bottom: 14px;
+  left: var(--side-pad);
+  max-width: 42vw;
+  height: var(--fact-h);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px 0 10px;
+  background: rgba(4,6,10,0.82);
+  border: 1px solid rgba(0,255,224,0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  pointer-events: all;
+}
+
+#fact-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(0,255,224,0.3);
+  color: var(--accent);
+  font-size: 0.85rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+#fact-btn:hover {
+  background: rgba(0,255,224,0.12);
+  box-shadow: 0 0 10px rgba(0,255,224,0.35);
+}
+
+#fact-text {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--fg);
+  opacity: 0.42;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  /* clip long text with ellipsis — user can read on hover */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  transition: opacity 0.25s;
+}
+
+.fact-pop {
+  animation: factPop 0.45s ease forwards;
+}
+
+@keyframes factPop {
+  0%   { opacity:0.05; transform:translateY(4px); }
+  60%  { opacity:0.48; transform:translateY(0); }
+  100% { opacity:0.42; }
+}
+
+/* ================= BOTTOM-RIGHT NAV PILLS ================= */
+/*
+  Floating pill cluster anchored bottom-right.
+  Does NOT span full width — leaderboard is centered-right, not bottom-right,
+  so no collision.
+*/
+#bottom-nav {
+  position: absolute;
+  bottom: 14px;
+  right: var(--side-pad);
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  pointer-events: all;
+}
+
+.nav-btn {
+  background: rgba(4,6,10,0.85);
+  border: 1px solid rgba(0,255,224,0.14);
+  border-radius: 20px;
+  color: var(--mid);
+  font-family: var(--font-main);
+  cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 7px 14px;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(10px);
 }
 
-#flow-label {
+.nav-btn:hover {
+  color: var(--fg);
+  background: rgba(0,255,224,0.07);
+  border-color: rgba(0,255,224,0.3);
+}
+
+.nav-icon  { font-size: 0.85rem; line-height: 1; }
+.nav-label { font-size: 0.38rem; letter-spacing: 0.22em; }
+
+.nav-active {
+  color: var(--accent) !important;
+  background: rgba(0,255,224,0.08) !important;
+  border-color: rgba(0,255,224,0.35) !important;
+  box-shadow: 0 0 14px rgba(0,255,224,0.2) !important;
+}
+
+.nav-active .nav-icon { text-shadow: var(--glow-cyan); }
+
+/* ================= PANEL WRAP ================= */
+/*
+  Anchored above the nav pills on the right side.
+  Width is constrained so it doesn't cover the flow bar or HUD.
+*/
+#panel-wrap {
+  position: absolute;
+  bottom: calc(var(--nav-h) + 10px);
+  right: var(--side-pad);
+  width: min(360px, 55vw);
+  z-index: 25;
+}
+
+.panel-animate {
+  animation: panelSlideUp 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+
+@keyframes panelSlideUp {
+  from { transform:translateY(24px); opacity:0; }
+  to   { transform:translateY(0);    opacity:1; }
+}
+
+.panel {
+  background: rgba(4,6,10,0.97);
+  border: 1px solid rgba(0,255,224,0.15);
+  border-radius: 12px;
+  padding: 18px 20px 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,255,224,0.18) transparent;
+  backdrop-filter: blur(16px);
+}
+
+.panel-header {
+  font-family: var(--font-mono);
   font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  color: var(--mid);
-  opacity: 0.6;
+  letter-spacing: 0.38em;
+  color: var(--accent);
+  opacity: 0.7;
+  margin-bottom: 16px;
 }
 
-#flow-track {
-  width: 80px;
-  height: 3px;
-  background: rgba(255,255,255,0.07);
-  border-radius: 2px;
-  overflow: hidden;
-}
+.panel-body { display:flex; flex-direction:column; gap:12px; }
 
-#flow-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent), #00ccff);
-  border-radius: 2px;
-  transition: width 0.4s ease, background 0.4s;
-  box-shadow: 0 0 8px rgba(0,255,224,0.6);
-}
+/* Tutorial */
+.tut-step  { display:flex; gap:12px; align-items:flex-start; }
+.tut-num   { font-family:var(--font-mono); font-size:0.6rem; color:var(--accent); opacity:0.45; min-width:20px; padding-top:1px; }
+.tut-text  { font-family:var(--font-mono); font-size:0.68rem; color:var(--fg); opacity:0.58; line-height:1.65; }
+.tut-text strong { color:var(--accent); font-weight:400; }
+
+/* About */
+.about-title   { font-family:var(--font-main); font-size:1.3rem; font-weight:700; color:var(--accent); letter-spacing:0.3em; text-shadow:var(--glow-cyan); }
+.about-sub     { font-family:var(--font-mono); font-size:0.6rem; color:var(--fg); opacity:0.35; letter-spacing:0.13em; margin-top:5px; margin-bottom:4px; }
+.about-section { margin-top:13px; }
+.about-label   { font-family:var(--font-main); font-size:0.42rem; letter-spacing:0.34em; color:var(--accent2); opacity:0.58; margin-bottom:4px; }
+.about-text    { font-family:var(--font-mono); font-size:0.67rem; color:var(--fg); opacity:0.5; line-height:1.72; }
+.about-text em { color:var(--accent); font-style:normal; }
 
 /* ================= END SCREEN ================= */
 #end-screen {
@@ -404,14 +699,9 @@ body::after {
   animation: endFadeIn 0.6s ease;
 }
 
-@keyframes endFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@keyframes endFadeIn { from{opacity:0;} to{opacity:1;} }
 
-.hidden {
-  display: none !important;
-}
+.hidden { display:none !important; }
 
 #end-content {
   text-align: center;
@@ -422,7 +712,7 @@ body::after {
 }
 
 #end-title {
-  font-size: clamp(1.5rem, 5vw, 2.8rem);
+  font-size: clamp(1.5rem,5vw,2.8rem);
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--fg);
@@ -431,7 +721,7 @@ body::after {
 #end-sub {
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   color: var(--mid);
 }
 
@@ -447,162 +737,106 @@ body::after {
 
 #retry-btn {
   margin-top: 8px;
-  padding: 12px 32px;
+  padding: 12px 34px;
   background: transparent;
   border: 1px solid rgba(0,255,224,0.4);
   color: var(--accent);
   font-family: var(--font-main);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.3em;
   cursor: pointer;
+  border-radius: 4px;
   transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
 #retry-btn:hover {
   background: rgba(0,255,224,0.08);
   border-color: var(--accent);
-  box-shadow: 0 0 20px rgba(0,255,224,0.2);
+  box-shadow: 0 0 22px rgba(0,255,224,0.25);
 }
 
-/* ================= GLITCH ================= */
-.glitch {
-  animation: glitchAnim 0.18s steps(2) forwards;
-}
+/* ================= GLITCH / DISTORT ================= */
+.glitch  { animation: glitchAnim 0.18s steps(2) forwards; }
 
 @keyframes glitchAnim {
-  0%   { transform: translate(3px, -2px) skewX(1deg); filter: hue-rotate(20deg); }
-  33%  { transform: translate(-3px, 2px) skewX(-1deg); filter: hue-rotate(-20deg); }
-  66%  { transform: translate(2px, 1px); filter: hue-rotate(10deg); }
-  100% { transform: translate(0, 0); filter: none; }
+  0%   { transform:translate(3px,-2px) skewX(1deg);  filter:hue-rotate(20deg); }
+  33%  { transform:translate(-3px,2px) skewX(-1deg); filter:hue-rotate(-20deg); }
+  66%  { transform:translate(2px,1px);               filter:hue-rotate(10deg); }
+  100% { transform:translate(0,0);                   filter:none; }
 }
 
-/* ================= DISTORT ================= */
-.distort {
-  animation: distortAnim 0.22s ease forwards;
-}
+.distort { animation: distortAnim 0.22s ease forwards; }
 
 @keyframes distortAnim {
-  0%   { filter: blur(0px) brightness(1); }
-  40%  { filter: blur(3px) brightness(1.3); }
-  100% { filter: blur(0px) brightness(1); }
+  0%   { filter:blur(0px)  brightness(1); }
+  40%  { filter:blur(3px)  brightness(1.35); }
+  100% { filter:blur(0px)  brightness(1); }
 }
 
-/* ================= TIMING RING ================= */
-#timing-ring {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  border: 2px solid rgba(0,255,224,0.7);
-  box-shadow: 0 0 12px rgba(0,255,224,0.4), inset 0 0 8px rgba(0,255,224,0.1);
-  pointer-events: none;
-  opacity: 0;
-  z-index: 2;
-  /* position/size driven by JS — no CSS transition so JS rAF is smooth */
+/* ================= FLOW BAR — vertical fill direction ================= */
+/*
+  The fill goes bottom→top to feel like energy rising.
+  JS sets height% not width%.
+*/
+#flow-fill {
+  /* override: fill from bottom */
+  align-self: flex-end;
 }
 
-/* ================= DIFFICULTY LABEL ================= */
-#diff-label-wrap {
-  position: absolute;
-  top: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  text-align: center;
-  pointer-events: none;
+/* ================= MOBILE ================= */
+@media (max-width: 600px) {
+  :root {
+    --side-pad: 12px;
+    --nav-h:    46px;
+    --fact-h:   34px;
+  }
+
+  /* HUD compact */
+  #hud { gap: 10px; }
+  .value { font-size: 1.2rem; }
+  .speed-val { font-size: 0.9rem; }
+
+  /* Chat hidden on small screens */
+  #chat-layer { display: none; }
+
+  /* Flow bar shorter */
+  #flow-track { height: 80px; }
+
+  /* Leaderboard smaller text */
+  #leaderboard { font-size: 0.62rem; line-height: 1.7; }
+
+  /* Game circle smaller */
+  #center, #ring-outer, #timing-ring { width: 200px; height: 200px; }
+  #ring   { width: 158px; height: 158px; }
+  #circle { width: 110px; height: 110px; }
+  #feedback { top: calc(50% + 76px); font-size: 0.65rem; }
+
+  /* Combo and message adjust */
+  #combo-burst { top: calc(50% - 130px); font-size: 0.62rem; }
+  #message-layer { top: calc(50% + 118px); }
+
+  /* Fact strip slightly shorter text */
+  #fact-strip { max-width: 54vw; }
+  #fact-text  { font-size: 0.54rem; }
+
+  /* Nav pills slightly smaller */
+  .nav-btn { padding: 6px 10px; }
+  .nav-icon { font-size: 0.75rem; }
+
+  /* Panel full-width on mobile */
+  #panel-wrap {
+    right: var(--side-pad);
+    left: var(--side-pad);
+    width: auto;
+    bottom: calc(var(--nav-h) + 8px);
+  }
+
+  .panel { max-height: 45vh; }
 }
 
-#diff-label {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.35em;
-  color: var(--accent);
-  opacity: 0;
-}
-
-.diff-pop {
-  animation: diffPop 1.8s ease forwards !important;
-}
-
-@keyframes diffPop {
-  0%   { opacity: 0; transform: translateY(-6px); }
-  15%  { opacity: 0.9; transform: translateY(0); }
-  70%  { opacity: 0.7; }
-  100% { opacity: 0; }
-}
-
-/* ================= OVERLAY BEST SCORE ================= */
-#overlay-best {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.25em;
-  color: var(--accent);
-  opacity: 0.55;
-  min-height: 1.2em;
-}
-
-/* ================= MOBILE RESPONSIVE ================= */
-@media (max-width: 480px) {
-  #hud {
-    top: 16px;
-    left: 16px;
-    gap: 12px;
-  }
-
-  .value {
-    font-size: 1.2rem;
-  }
-
-  #chat-layer {
-    display: none; /* hide chat on small screens — not enough room */
-  }
-
-  #leaderboard-layer {
-    bottom: 60px;
-    right: 14px;
-    font-size: 0.65rem;
-  }
-
-  #center {
-    width: 200px;
-    height: 200px;
-  }
-
-  #ring-outer {
-    width: 200px;
-    height: 200px;
-  }
-
-  #ring {
-    width: 160px;
-    height: 160px;
-  }
-
-  #circle {
-    width: 110px;
-    height: 110px;
-  }
-
-  #timing-ring {
-    width: 200px;
-    height: 200px;
-  }
-
-  #feedback {
-    top: calc(50% + 75px);
-    font-size: 0.65rem;
-  }
-
-  #flow-bar-wrap {
-    bottom: 16px;
-    left: 16px;
-  }
-
-  #message-layer {
-    bottom: 16px;
-  }
-
-  #diff-label-wrap {
-    top: 16px;
-  }
+/* ================= TABLET ================= */
+@media (min-width: 601px) and (max-width: 1024px) {
+  #chat-layer { width: 150px; font-size: 0.65rem; }
+  #leaderboard { font-size: 0.68rem; }
+  #panel-wrap { width: min(320px, 50vw); }
 }

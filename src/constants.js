@@ -1,18 +1,18 @@
 // ============================================================
-// constants.js — all magic numbers and static data in one place
+// constants.js
 // ============================================================
 
 export const TIMING = {
-    PERFECT_WINDOW: 90,   // ms — perfect hit (tightens with difficulty)
-    GOOD_WINDOW:    210,  // ms — good hit    (tightens with difficulty)
-    MIN_INTERVAL:   240,  // ms — fastest possible beat
-    BASE_INTERVAL:  700,  // ms — default beat interval
-    PULSE_DURATION: 110,  // ms — how long pulse animation lasts
-    FLASH_DURATION: 300,  // ms — how long hit flash lasts
+    PERFECT_WINDOW: 90,
+    GOOD_WINDOW:    210,
+    MIN_INTERVAL:   240,
+    BASE_INTERVAL:  700,
+    PULSE_DURATION: 110,
+    FLASH_DURATION: 300,
 };
 
-export const GLITCH_DURATION  = 180; // ms
-export const DISTORT_DURATION = 220; // ms
+export const GLITCH_DURATION  = 180;
+export const DISTORT_DURATION = 220;
 
 export const FLOW = {
     MAX:            60,
@@ -23,9 +23,8 @@ export const FLOW = {
     GLOW_THRESHOLD: 25,
 };
 
-// Difficulty levels — unlocked as flowState climbs
 export const DIFFICULTY_LEVELS = [
-    { minFlow: 0,  label: "SYNC I",   speedMult: 1.0,  perfectWindow: 90,  goodWindow: 210 },
+    { minFlow:  0, label: "SYNC I",   speedMult: 1.00, perfectWindow: 90,  goodWindow: 210 },
     { minFlow: 15, label: "SYNC II",  speedMult: 0.88, perfectWindow: 78,  goodWindow: 185 },
     { minFlow: 30, label: "SYNC III", speedMult: 0.76, perfectWindow: 65,  goodWindow: 160 },
     { minFlow: 45, label: "SYNC IV",  speedMult: 0.62, perfectWindow: 52,  goodWindow: 130 },
@@ -37,8 +36,7 @@ export const FAIL_CLICKS     = 30;
 export const FAIL_FLOW       = 5;
 export const SOFT_END_CLICKS = 20;
 export const SOFT_END_CHANCE = 0.04;
-
-export const PATTERN_LENGTH = 12;
+export const PATTERN_LENGTH  = 12;
 
 export const CHAT_CHANCE    = 0.32;
 export const MESSAGE_CHANCE = 0.18;
@@ -63,7 +61,7 @@ export const CHAT_LINES = [
     "stay in it",
     "the sync is real",
     "he's at SYNC IV already??",
-    "it's getting faster",
+    "it's getting faster...",
     "the windows are closing",
     "bro is in OVERLOAD",
 ];
