@@ -1,12 +1,8 @@
 // ============================================================
-// constants.js
+// constants.js — base constants (mode-specific values in modes.js)
 // ============================================================
 
 export const TIMING = {
-    PERFECT_WINDOW: 90,
-    GOOD_WINDOW:    210,
-    MIN_INTERVAL:   240,
-    BASE_INTERVAL:  700,
     PULSE_DURATION: 110,
     FLASH_DURATION: 300,
 };
@@ -16,31 +12,26 @@ export const DISTORT_DURATION = 220;
 
 export const FLOW = {
     MAX:            60,
-    PERFECT_GAIN:   3,
-    GOOD_GAIN:      1,
-    MISS_PENALTY:   5,
     HIGH_THRESHOLD: 40,
     GLOW_THRESHOLD: 25,
 };
 
-export const DIFFICULTY_LEVELS = [
-    { minFlow:  0, label: "SYNC I",   speedMult: 1.00, perfectWindow: 90,  goodWindow: 210 },
-    { minFlow: 15, label: "SYNC II",  speedMult: 0.88, perfectWindow: 78,  goodWindow: 185 },
-    { minFlow: 30, label: "SYNC III", speedMult: 0.76, perfectWindow: 65,  goodWindow: 160 },
-    { minFlow: 45, label: "SYNC IV",  speedMult: 0.62, perfectWindow: 52,  goodWindow: 130 },
-    { minFlow: 58, label: "OVERLOAD", speedMult: 0.50, perfectWindow: 40,  goodWindow: 105 },
+// In-game difficulty tiers — speedMult and window tightening
+// Applied ON TOP of the base mode values
+export const DIFFICULTY_TIERS = [
+    { minFlow:  0, label: "SYNC I",   speedMult: 1.00, windowMult: 1.00 },
+    { minFlow: 15, label: "SYNC II",  speedMult: 0.90, windowMult: 0.88 },
+    { minFlow: 30, label: "SYNC III", speedMult: 0.80, windowMult: 0.76 },
+    { minFlow: 45, label: "SYNC IV",  speedMult: 0.70, windowMult: 0.62 },
+    { minFlow: 58, label: "OVERLOAD", speedMult: 0.60, windowMult: 0.50 },
 ];
 
-export const WIN_STREAK      = 20;
-export const FAIL_CLICKS     = 30;
-export const FAIL_FLOW       = 5;
 export const SOFT_END_CLICKS = 20;
 export const SOFT_END_CHANCE = 0.04;
 export const PATTERN_LENGTH  = 12;
 
 export const CHAT_CHANCE    = 0.32;
 export const MESSAGE_CHANCE = 0.18;
-export const GLITCH_CHANCE  = 0.05;
 export const DISTORT_CHANCE = 0.07;
 
 export const CHAT_LINES = [
@@ -64,6 +55,10 @@ export const CHAT_LINES = [
     "it's getting faster...",
     "the windows are closing",
     "bro is in OVERLOAD",
+    "impossible mode?? respect",
+    "he chose impossible lmaooo",
+    "easy mode speedrun incoming",
+    "hard mode energy rn",
 ];
 
 export const IDLE_MESSAGES = [
@@ -73,4 +68,4 @@ export const IDLE_MESSAGES = [
     "don't rush.",
 ];
 
-export const PLAYER_NAMES = ["ZenX", "Void", "Pulse", "Echo77", "Sync"];
+export const PLAYER_NAMES = ["Harshid", "Dusky", "Ocean", "POwerpuffGurl", "SPARKYGAMER"];

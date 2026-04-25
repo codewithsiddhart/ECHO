@@ -1,22 +1,26 @@
 // ============================================================
-// main.js — entry point
+// main.js — entry point, mode select, keyboard, panels, facts
 // ============================================================
 
 import { resetState, beatLoop, handleClick, gameStarted } from "./game.js";
 import { generateFakePlayers, updateLeaderboard } from "./players.js";
-import { updateHUD } from "./ui.js";
+import { updateHUD, applyModeTheme } from "./ui.js";
 import { initAudio } from "./audio.js";
 import { fetchFact } from "./facts.js";
+import { setMode, getMode, GAME_MODES } from "./modes.js";
 
 console.log("ECHO :: JS LOADED");
 
-const audioOverlay = document.getElementById("audio-overlay");
-const retryBtn     = document.getElementById("retry-btn");
-const overlayBest  = document.getElementById("overlay-best");
-const factText     = document.getElementById("fact-text");
-const factBtn      = document.getElementById("fact-btn");
+// ── Element refs ─────────────────────────────────────────────
+const audioOverlay  = document.getElementById("audio-overlay");
+const modeScreen    = document.getElementById("mode-screen");
+const retryBtn      = document.getElementById("retry-btn");
+const changeModeBtn = document.getElementById("change-mode-btn");
+const overlayBest   = document.getElementById("overlay-best");
+const factText      = document.getElementById("fact-text");
+const factBtn       = document.getElementById("fact-btn");
 
-// --- Panels ---
+// ── Panels ───────────────────────────────────────────────────
 let activePanel = null;
 
 function initPanels() {
@@ -33,7 +37,6 @@ function openPanel(name) {
     const wrap  = document.getElementById("panel-wrap");
     const tut   = document.getElementById("panel-tutorial");
     const about = document.getElementById("panel-about");
-
     tut.classList.add("hidden");
     about.classList.add("hidden");
 
@@ -51,7 +54,33 @@ function openPanel(name) {
 
 export function isPanelOpen() { return activePanel !== null; }
 
-// --- Facts ---
+// ── Mode select screen ───────────────────────────────────────
+function initModeSelect() {
+    const btns = document.querySelectorAll(".mode-card");
+    btns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const modeId = btn.dataset.mode;
+            setMode(modeId);
+            applyModeTheme(getMode());
+            showStoredBest();
+            modeScreen.classList.add("hidden");
+            startGame();
+        });
+    });
+}
+
+// ── Stored best per mode ─────────────────────────────────────
+function showStoredBest() {
+    const mode   = getMode();
+    const stored = localStorage.getItem("echo_best_" + mode.id);
+    if (overlayBest && stored && parseInt(stored) > 0) {
+        overlayBest.innerText = "best on " + mode.label + ": " + stored;
+    } else if (overlayBest) {
+        overlayBest.innerText = "";
+    }
+}
+
+// ── Facts ────────────────────────────────────────────────────
 async function loadFact() {
     if (!factText) return;
     factText.style.opacity = "0.1";
@@ -63,18 +92,11 @@ async function loadFact() {
     factText.classList.add("fact-pop");
 }
 
-// --- Stored best ---
-function showStoredBest() {
-    const stored = localStorage.getItem("echo_best");
-    if (overlayBest && stored && parseInt(stored) > 0)
-        overlayBest.innerText = "all-time best: " + stored;
-}
-
-// --- Init ---
+// ── Init ─────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
     console.log("ECHO :: INIT");
-    showStoredBest();
     initPanels();
+    initModeSelect();
     loadFact();
 
     if (factBtn) {
@@ -82,22 +104,26 @@ window.addEventListener("DOMContentLoaded", () => {
         factBtn.addEventListener("touchstart",(e) => { e.stopPropagation(); loadFact(); }, { passive: true });
     }
 
+    if (changeModeBtn) {
+        changeModeBtn.addEventListener("click", () => location.reload());
+    }
+
+    // First screen = audio unlock overlay
     if (audioOverlay) {
         audioOverlay.style.display = "flex";
         audioOverlay.addEventListener("click", (e) => {
             e.stopPropagation();
-            if (gameStarted) return;
             initAudio();
             audioOverlay.style.display = "none";
-            startGame();
+            // show mode select next
+            modeScreen.classList.remove("hidden");
         });
-    } else {
-        startGame();
     }
 });
 
+// ── Start game ───────────────────────────────────────────────
 function startGame() {
-    console.log("ECHO :: START");
+    console.log("ECHO :: START —", getMode().label);
     resetState();
     updateHUD({ streak: 0, best: 0, totalClicks: 0, correctClicks: 0 });
     generateFakePlayers();
@@ -105,36 +131,34 @@ function startGame() {
     beatLoop();
 }
 
-// --- Input guard ---
+// ── Global input (click + touch + keyboard) ──────────────────
 function handleInput(e) {
     if (isPanelOpen())                      return;
-    if (e.target.closest("#retry-btn"))     return;
-    if (e.target.closest("#audio-overlay")) return;
-    if (e.target.closest("#end-screen"))    return;
-    if (e.target.closest("#bottom-nav"))    return;
-    if (e.target.closest("#fact-strip"))    return;
-    if (e.target.closest("#panel-wrap"))    return;
+    if (e.target?.closest?.("#retry-btn"))     return;
+    if (e.target?.closest?.("#audio-overlay")) return;
+    if (e.target?.closest?.("#mode-screen"))   return;
+    if (e.target?.closest?.("#end-screen"))    return;
+    if (e.target?.closest?.("#bottom-nav"))    return;
+    if (e.target?.closest?.("#fact-strip"))    return;
+    if (e.target?.closest?.("#panel-wrap"))    return;
+    if (e.target?.closest?.("#change-mode-btn")) return;
     handleClick();
 }
 
 document.addEventListener("click",      handleInput);
 document.addEventListener("touchstart", handleInput, { passive: true });
 
-retryBtn.addEventListener("click",     (e) => { e.stopPropagation(); location.reload(); });
-retryBtn.addEventListener("touchstart",(e) => { e.stopPropagation(); location.reload(); }, { passive: true });
-
-let keyHeld = false;
-
-window.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && !keyHeld) {
-        keyHeld = true;
+// ── Keyboard support ─────────────────────────────────────────
+document.addEventListener("keydown", (e) => {
+    if (e.repeat) return; // ignore held keys
+    if (e.code === "Space" || e.code === "Enter") {
         e.preventDefault();
-        handleClick();
+        if (!isPanelOpen() && !modeScreen?.classList.contains("hidden") === false) {
+            handleClick();
+        }
     }
 });
 
-window.addEventListener("keyup", (e) => {
-    if (e.code === "Space") {
-        keyHeld = false;
-    }
-});
+// ── Retry ────────────────────────────────────────────────────
+retryBtn?.addEventListener("click",     (e) => { e.stopPropagation(); location.reload(); });
+retryBtn?.addEventListener("touchstart",(e) => { e.stopPropagation(); location.reload(); }, { passive: true });

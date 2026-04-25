@@ -18,8 +18,8 @@ const FALLBACK = [
     "A snail can sleep for 3 years.",
     "Cleopatra lived closer to the Moon landing than to the pyramids.",
     "Wombat poop is cube-shaped.",
-    "The average human body contains enough iron to make a 3-inch nail.",
     "Butterflies taste with their feet.",
+    "The average human body contains enough iron to make a 3-inch nail.",
 ];
 
 let isFetching = false;
@@ -29,14 +29,11 @@ export async function fetchFact() {
     isFetching = true;
     try {
         const res  = await fetch(FACT_API);
-        if (!res.ok) throw new Error("non-200");
+        if (!res.ok) throw new Error();
         const data = await res.json();
         return data.text?.trim() || pick(FALLBACK);
-    } catch {
-        return pick(FALLBACK);
-    } finally {
-        isFetching = false;
-    }
+    } catch { return pick(FALLBACK); }
+    finally  { isFetching = false; }
 }
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }

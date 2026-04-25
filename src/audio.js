@@ -1,14 +1,63 @@
 // ============================================================
-// audio.js — Web Audio API, zero external files
+// audio.js — Web Audio API, reactive ambient drone + all hits
 // ============================================================
 
-let ctx = null;
+let ctx         = null;
+let droneNode   = null;
+let droneGain   = null;
+let droneFilter = null;
 
 export function initAudio() {
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
+    initDrone();
 }
 
+// ── Ambient drone ──────────────────────────────────────────
+function initDrone() {
+    if (!ctx) return;
+
+    // Base oscillator — low rumble
+    droneNode = ctx.createOscillator();
+    droneNode.type = "sine";
+    droneNode.frequency.value = 55; // A1
+
+    // Filter for tonal shaping
+    droneFilter = ctx.createBiquadFilter();
+    droneFilter.type = "lowpass";
+    droneFilter.frequency.value = 200;
+
+    droneGain = ctx.createGain();
+    droneGain.gain.value = 0; // silent until game starts
+
+    droneNode.connect(droneFilter);
+    droneFilter.connect(droneGain);
+    droneGain.connect(ctx.destination);
+    droneNode.start();
+}
+
+// Call every beat — flowState 0-60 drives pitch and volume
+export function updateDrone(flowState, modeColor) {
+    if (!ctx || !droneNode) return;
+    const t    = ctx.currentTime;
+    const pct  = flowState / 60;
+
+    // pitch rises from 55Hz → 110Hz as flow maxes
+    droneNode.frequency.setTargetAtTime(55 + pct * 55, t, 0.8);
+
+    // volume rises gently 0 → 0.08
+    droneGain.gain.setTargetAtTime(pct * 0.08, t, 1.2);
+
+    // filter opens up at high flow — more harmonic presence
+    droneFilter.frequency.setTargetAtTime(120 + pct * 400, t, 1.0);
+}
+
+export function stopDrone() {
+    if (!droneGain) return;
+    droneGain.gain.setTargetAtTime(0, ctx.currentTime, 0.5);
+}
+
+// ── Helpers ────────────────────────────────────────────────
 function osc(type, freq, start, duration, gainVal, pitchEnd = null) {
     if (!ctx) return;
     const o = ctx.createOscillator();
@@ -24,6 +73,7 @@ function osc(type, freq, start, duration, gainVal, pitchEnd = null) {
     o.stop(start + duration);
 }
 
+// ── Beat ───────────────────────────────────────────────────
 export function playBeat() {
     if (!ctx) return;
     const t = ctx.currentTime;
@@ -41,6 +91,7 @@ export function playBeat() {
     src.start(t);
 }
 
+// ── Hits ───────────────────────────────────────────────────
 export function playPerfect() {
     if (!ctx) return;
     const t = ctx.currentTime;
@@ -74,4 +125,23 @@ export function playGlitch() {
     const t = ctx.currentTime;
     osc("sawtooth", 200 + Math.random() * 400, t,        0.08, 0.18);
     osc("square",   100 + Math.random() * 200, t + 0.04, 0.06, 0.13);
+}
+
+// ── Milestone flash sound ───────────────────────────────────
+export function playMilestone(streak) {
+    if (!ctx) return;
+    const t    = ctx.currentTime;
+    const freq = 440 + streak * 12; // higher pitch per milestone
+    osc("sine", freq,       t,        0.18, 0.45);
+    osc("sine", freq * 1.5, t + 0.06, 0.12, 0.30);
+}
+
+// ── Streak milestone chime ──────────────────────────────────
+export function playStreakBell(n) {
+    if (!ctx) return;
+    const t     = ctx.currentTime;
+    const notes = [523, 659, 784];
+    const freq  = notes[(n / 5 - 1) % notes.length] || 523;
+    osc("sine",     freq,     t,        0.5, 0.35);
+    osc("triangle", freq * 2, t + 0.05, 0.3, 0.20);
 }

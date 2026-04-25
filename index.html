@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <!-- AUDIO OVERLAY -->
+  <!-- ══ 1. AUDIO UNLOCK OVERLAY ══ -->
   <div id="audio-overlay">
     <div id="overlay-inner">
       <div id="overlay-title">ECHO</div>
@@ -21,17 +21,69 @@
     </div>
   </div>
 
+  <!-- ══ 2. MODE SELECT SCREEN ══ -->
+  <div id="mode-screen" class="hidden">
+    <div id="mode-screen-inner">
+      <div id="mode-title">SELECT MODE</div>
+      <div id="mode-sub">choose your difficulty</div>
+      <div id="mode-cards">
+
+        <button class="mode-card" data-mode="easy">
+          <div class="mode-card-icon" style="color:#00ffe0">◌</div>
+          <div class="mode-card-label" style="color:#00ffe0">EASY</div>
+          <div class="mode-card-sub">feel the rhythm</div>
+          <div class="mode-card-stats">
+            <span>90ms window</span>
+            <span>win @ 15</span>
+          </div>
+        </button>
+
+        <button class="mode-card" data-mode="medium">
+          <div class="mode-card-icon" style="color:#00ccff">◎</div>
+          <div class="mode-card-label" style="color:#00ccff">MEDIUM</div>
+          <div class="mode-card-sub">find the edge</div>
+          <div class="mode-card-stats">
+            <span>90ms window</span>
+            <span>win @ 20</span>
+          </div>
+        </button>
+
+        <button class="mode-card" data-mode="hard">
+          <div class="mode-card-icon" style="color:#ff8800">◈</div>
+          <div class="mode-card-label" style="color:#ff8800">HARD</div>
+          <div class="mode-card-sub">it will break you</div>
+          <div class="mode-card-stats">
+            <span>60ms window</span>
+            <span>win @ 25</span>
+          </div>
+        </button>
+
+        <button class="mode-card" data-mode="impossible">
+          <div class="mode-card-icon" style="color:#ff2d78">◆</div>
+          <div class="mode-card-label" style="color:#ff2d78">IMPOSSIBLE</div>
+          <div class="mode-card-sub">you will not win</div>
+          <div class="mode-card-stats">
+            <span>38ms window</span>
+            <span>win @ 30</span>
+          </div>
+        </button>
+
+      </div>
+      <div id="mode-hint">SPACE or tap to hit · keyboard supported</div>
+    </div>
+  </div>
+
+  <!-- ══ 3. GAME ══ -->
   <div id="app">
 
-    <!-- BACKGROUND -->
+    <!-- Background -->
     <div id="background">
       <div id="vignette"></div>
       <div id="grid-lines"></div>
       <canvas id="particle-canvas"></canvas>
     </div>
 
-    <!-- ═══════════ TOP STRIP ═══════════ -->
-    <!-- HUD: top-left -->
+    <!-- HUD top-left -->
     <div id="hud">
       <div class="stat">
         <div class="label">STREAK</div>
@@ -51,35 +103,32 @@
       </div>
     </div>
 
-    <!-- Diff label: top-center -->
-    <div id="diff-label-wrap">
-      <div id="diff-label"></div>
+    <!-- Mode tag + diff label — top-center -->
+    <div id="top-center">
+      <div id="mode-tag"></div>
+      <div id="diff-label-wrap"><div id="diff-label"></div></div>
     </div>
 
-    <!-- Chat: top-right -->
+    <!-- Chat top-right -->
     <div id="chat-layer">
       <div id="chat-title">LIVE</div>
       <div id="chat"></div>
     </div>
 
-    <!-- ═══════════ LEFT SIDE ═══════════ -->
-    <!-- Flow bar: left, vertically centered -->
+    <!-- Flow bar left-center (vertical) -->
     <div id="flow-bar-wrap">
       <div id="flow-label">FLOW</div>
-      <div id="flow-track">
-        <div id="flow-fill"></div>
-      </div>
+      <div id="flow-track"><div id="flow-fill"></div></div>
       <div id="flow-pct">0%</div>
     </div>
 
-    <!-- ═══════════ RIGHT SIDE ═══════════ -->
-    <!-- Leaderboard: right, vertically centered -->
+    <!-- Leaderboard right-center -->
     <div id="leaderboard-layer">
       <div id="leaderboard-title">SYNC BOARD</div>
       <div id="leaderboard"></div>
     </div>
 
-    <!-- ═══════════ CENTER ═══════════ -->
+    <!-- Game circle center -->
     <div id="game">
       <div id="center">
         <div id="ring-outer"></div>
@@ -90,23 +139,22 @@
       </div>
     </div>
 
-    <!-- Combo burst: floats above circle -->
+    <!-- Combo burst above circle -->
     <div id="combo-burst"></div>
 
-    <!-- Phase message: just below center -->
-    <div id="message-layer">
-      <div id="message"></div>
-    </div>
+    <!-- Milestone flash — full-screen number flash -->
+    <div id="milestone-flash"></div>
 
-    <!-- ═══════════ BOTTOM-LEFT: FACT STRIP ═══════════ -->
-    <!-- Anchored to bottom-left, width ~40%, does NOT touch right side -->
+    <!-- Phase message below circle -->
+    <div id="message-layer"><div id="message"></div></div>
+
+    <!-- Fact strip bottom-left pill -->
     <div id="fact-strip">
       <button id="fact-btn" title="New fact">⟳</button>
       <div id="fact-text">loading transmission...</div>
     </div>
 
-    <!-- ═══════════ BOTTOM-RIGHT: NAV PILLS ═══════════ -->
-    <!-- Floating pill nav anchored to bottom-right, does NOT touch left side -->
+    <!-- Nav pills bottom-right -->
     <nav id="bottom-nav">
       <button class="nav-btn nav-active" id="nav-play">
         <span class="nav-icon">◈</span>
@@ -122,19 +170,19 @@
       </button>
     </nav>
 
-    <!-- ═══════════ PANEL (slides up from bottom-right nav) ═══════════ -->
+    <!-- Panel (slides above nav) -->
     <div id="panel-wrap" class="hidden panel-animate">
 
       <div id="panel-tutorial" class="panel hidden">
         <div class="panel-header">// HOW TO PLAY</div>
         <div class="panel-body">
-          <div class="tut-step"><div class="tut-num">01</div><div class="tut-text"><strong>watch the ring</strong> — it shrinks toward the circle. That's your beat cue.</div></div>
-          <div class="tut-step"><div class="tut-num">02</div><div class="tut-text"><strong>tap</strong> when the ring reaches the circle. Closer = higher rating.</div></div>
-          <div class="tut-step"><div class="tut-num">03</div><div class="tut-text"><strong>perfect</strong> &lt;90ms · <strong>good</strong> &lt;210ms · otherwise <strong>miss</strong>.</div></div>
-          <div class="tut-step"><div class="tut-num">04</div><div class="tut-text"><strong>flow</strong> rises with hits, drops on misses. High flow = faster beats + tighter windows.</div></div>
-          <div class="tut-step"><div class="tut-num">05</div><div class="tut-text"><strong>streak 20</strong> = win. Too many misses = echo fades.</div></div>
-          <div class="tut-step"><div class="tut-num">✦</div><div class="tut-text">5 perfects in a row triggers a <strong>combo burst</strong>.</div></div>
-          <div class="tut-step"><div class="tut-num">★</div><div class="tut-text"><strong>⟳</strong> bottom-left = random fact mid-game.</div></div>
+          <div class="tut-step"><div class="tut-num">01</div><div class="tut-text"><strong>watch the ring</strong> — it shrinks toward the circle. That's your beat.</div></div>
+          <div class="tut-step"><div class="tut-num">02</div><div class="tut-text"><strong>tap / press Space</strong> when the ring reaches the circle.</div></div>
+          <div class="tut-step"><div class="tut-num">03</div><div class="tut-text">Rating depends on timing. Windows tighten as flow rises and with harder modes.</div></div>
+          <div class="tut-step"><div class="tut-num">04</div><div class="tut-text"><strong>flow</strong> rises with hits, drops on misses. High flow = faster + tighter.</div></div>
+          <div class="tut-step"><div class="tut-num">05</div><div class="tut-text">Hit the <strong>win streak</strong> to break the sync. Too many misses and it fades.</div></div>
+          <div class="tut-step"><div class="tut-num">✦</div><div class="tut-text">5 perfects → <strong>combo burst</strong>. 5/10/15 → <strong>milestone flash</strong>.</div></div>
+          <div class="tut-step"><div class="tut-num">◌</div><div class="tut-text">Your best run is saved as a <strong>ghost</strong> on the leaderboard.</div></div>
         </div>
       </div>
 
@@ -144,82 +192,79 @@
           <div class="about-title">ECHO</div>
           <div class="about-sub">a rhythm that learns you... then betrays you.</div>
           <div class="about-section">
-            <div class="about-label">WHAT</div>
-            <div class="about-text">Minimalist rhythm game — vanilla JS, Web Audio API, zero libraries. Every sound is synthesised live in your browser.</div>
+            <div class="about-label">MODES</div>
+            <div class="about-text">Easy → Medium → Hard → Impossible. Each has its own timing windows, speed, and win condition. Your best streak is saved per mode.</div>
           </div>
           <div class="about-section">
-            <div class="about-label">DIFFICULTY</div>
-            <div class="about-text">5 tiers: SYNC I → OVERLOAD. Flow state drives speed and timing window size. It adapts to you.</div>
+            <div class="about-label">GHOST</div>
+            <div class="about-text">Your best run is recorded and replayed as a ghost on the leaderboard — you compete against yourself.</div>
           </div>
           <div class="about-section">
-            <div class="about-label">FACT STRIP</div>
-            <div class="about-text">Pulls live facts from the Useless Facts API. Offline? Falls back to built-in set silently.</div>
+            <div class="about-label">REPLAY</div>
+            <div class="about-text">After each run, the end screen shows a waveform of your accuracy — perfect (cyan), good (blue), miss (pink).</div>
           </div>
           <div class="about-section">
             <div class="about-label">STACK</div>
-            <div class="about-text">HTML · CSS · Vanilla JS · Web Audio API</div>
+            <div class="about-text">HTML · CSS · Vanilla JS · Web Audio API · Zero libraries.</div>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- END SCREEN -->
+    <!-- End screen -->
     <div id="end-screen" class="hidden">
       <div id="end-content">
+        <div id="end-mode-badge"></div>
         <div id="end-title">we were close.</div>
         <div id="end-sub">you can try again.</div>
         <div id="end-stats">
           <span id="end-accuracy">–</span>
           <span id="end-best">–</span>
+          <span id="end-mode">–</span>
         </div>
-        <button id="retry-btn">[ retry ]</button>
+        <!-- Replay waveform -->
+        <div id="replay-wrap">
+          <div id="replay-label">YOUR RUN</div>
+          <div id="replay-graph"></div>
+        </div>
+        <div id="end-actions">
+          <button id="retry-btn">[ retry ]</button>
+          <button id="change-mode-btn">[ change mode ]</button>
+        </div>
       </div>
     </div>
 
-  </div>
+  </div><!-- /#app -->
 
   <script type="module" src="src/main.js"></script>
 
-  <!-- Particle background -->
+  <!-- Particle canvas -->
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById("particle-canvas");
-      const ctx    = canvas.getContext("2d");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
       let W, H, particles = [];
-
-      function resize() {
-        W = canvas.width  = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-      }
-
-      function rand(a, b) { return a + Math.random() * (b - a); }
-
-      function initParticles() {
-        particles = Array.from({ length: 38 }, () => ({
-          x: rand(0, W), y: rand(0, H),
-          vx: rand(-0.15, 0.15), vy: rand(-0.18, -0.04),
-          r: rand(0.5, 1.8), alpha: rand(0.04, 0.18),
-        }));
-      }
-
+      const rand = (a,b) => a + Math.random()*(b-a);
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function init()   { particles = Array.from({length:40}, () => ({ x:rand(0,W), y:rand(0,H), vx:rand(-0.12,0.12), vy:rand(-0.16,-0.04), r:rand(0.5,1.8), a:rand(0.03,0.16) })); }
       function draw() {
-        ctx.clearRect(0, 0, W, H);
+        ctx.clearRect(0,0,W,H);
         for (const p of particles) {
           p.x += p.vx; p.y += p.vy;
-          if (p.y < -4) { p.y = H + 4; p.x = rand(0, W); }
+          if (p.y < -4) { p.y = H+4; p.x = rand(0,W); }
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,255,224,${p.alpha})`;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          // colour follows CSS --accent variable approximately
+          const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent-rgb").trim() || "0,255,224";
+          ctx.fillStyle = `rgba(${accent},${p.a})`;
           ctx.fill();
         }
         requestAnimationFrame(draw);
       }
-
-      resize();
-      initParticles();
-      draw();
-      window.addEventListener("resize", () => { resize(); initParticles(); });
+      resize(); init(); draw();
+      window.addEventListener("resize", () => { resize(); init(); });
     });
   </script>
 
