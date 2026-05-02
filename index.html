@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ECHO</title>
+  <meta name="theme-color" content="#04060a">
+  <meta name="description" content="A rhythm that learns you... then betrays you.">
+
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:title" content="ECHO">
+  <meta property="og:description" content="A rhythm game that learns you — then betrays you.">
+  <meta property="og:image" content="https://img.itch.zone/aW1nLzE2MDAwMDAwLnBuZw==/original/ECHO-banner.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://itch.io/games/tag-rhythm">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ECHO">
+  <meta name="twitter:description" content="A rhythm game that learns you — then betrays you.">
+  <meta name="twitter:image" content="https://img.itch.zone/aW1nLzE2MDAwMDAwLnBuZw==/original/ECHO-banner.png">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ECHO">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══ AUDIO UNLOCK ══ -->
+<div id="audio-overlay">
+  <div id="overlay-inner">
+    <div id="overlay-title">ECHO</div>
+    <div id="overlay-tagline">learn to trust your own sense of time</div>
+    <div id="overlay-hint-line">the ring is a hint. not an instruction.</div>
+    <div id="overlay-tap">tap anywhere to begin</div>
+    <div id="overlay-best"></div>
+  </div>
+</div>
+
+<!-- ══ MODE SELECT ══ -->
+<div id="mode-screen" class="hidden">
+  <div id="mode-screen-inner">
+
+    <div id="mode-header">
+      <div id="mode-title">choose your state</div>
+      <div id="mode-sub">this is not a difficulty selector. it's a question about where you are right now.</div>
+    </div>
+
+    <div id="mode-cards">
+
+      <button class="mode-card" data-mode="easy">
+        <div class="mc-glow" style="--mc:#00ffe0"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">🟢</span>
+          <span class="mc-name" style="color:#00ffe0">FEEL</span>
+        </div>
+        <div class="mc-desc">find the beat. nothing to prove. wide windows, slow tempo. just listen.</div>
+        <div class="mc-footer">
+          <span class="mc-best" id="best-easy"></span>
+          <span class="mc-win" style="color:#00ffe0">feel it ×15 in a row</span>
+        </div>
+      </button>
+
+      <button class="mode-card" data-mode="medium">
+        <div class="mc-glow" style="--mc:#00ccff"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">🔵</span>
+          <span class="mc-name" style="color:#00ccff">TRUST</span>
+        </div>
+        <div class="mc-desc">you know the beat now. stop watching the ring. trust your hands.</div>
+        <div class="mc-footer">
+          <span class="mc-best" id="best-medium"></span>
+          <span class="mc-win" style="color:#00ccff">trust it ×20 in a row</span>
+        </div>
+      </button>
+
+      <button class="mode-card" data-mode="hard">
+        <div class="mc-glow" style="--mc:#ff8800"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">🟠</span>
+          <span class="mc-name" style="color:#ff8800">FORGET</span>
+        </div>
+        <div class="mc-desc">stop thinking. your hands know what to do. thinking is the enemy.</div>
+        <div class="mc-footer">
+          <span class="mc-best" id="best-hard"></span>
+          <span class="mc-win" style="color:#ff8800">forget yourself ×25 in a row</span>
+        </div>
+      </button>
+
+      <button class="mode-card" data-mode="impossible">
+        <div class="mc-glow" style="--mc:#ff2d78"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">🔴</span>
+          <span class="mc-name" style="color:#ff2d78">DISSOLVE</span>
+        </div>
+        <div class="mc-desc">there is no you and the beat. there is only the beat. 38ms. nobody wins this.</div>
+        <div class="mc-footer">
+          <span class="mc-best" id="best-impossible"></span>
+          <span class="mc-win" style="color:#ff2d78">dissolve ×30 in a row</span>
+        </div>
+      </button>
+
+      <button class="mode-card mc-special" data-mode="practice">
+        <div class="mc-glow" style="--mc:#a0ff80"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">🟩</span>
+          <span class="mc-name" style="color:#a0ff80">LISTEN</span>
+        </div>
+        <div class="mc-desc">slow down. no fail. shows you exactly how early or late you are. learn yourself first.</div>
+        <div class="mc-footer">
+          <span class="mc-tag">warm up here first</span>
+        </div>
+      </button>
+
+      <button class="mode-card mc-special" data-mode="rhythm">
+        <div class="mc-glow" style="--mc:#c480ff"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">🟣</span>
+          <span class="mc-name" style="color:#c480ff">RHYTHM</span>
+        </div>
+        <div class="mc-desc">a sequence lights up — you copy it. 3 mistakes = game over.</div>
+        <div class="mc-footer">
+          <span class="mc-tag">pattern challenge</span>
+        </div>
+      </button>
+
+      <button class="mode-card mc-daily" data-mode="daily" id="daily-mode-card">
+        <div class="mc-glow" style="--mc:#ffd700"></div>
+        <div class="mc-top">
+          <span class="mc-emoji">⭐</span>
+          <span class="mc-name" style="color:#ffd700">DAILY</span>
+        </div>
+        <div class="mc-desc">same beat for everyone today. one shot. share your result.</div>
+        <div class="mc-footer">
+          <span class="mc-best" id="best-daily"></span>
+          <span class="mc-tag" style="color:#ffd700">resets at midnight</span>
+        </div>
+      </button>
+
+    </div>
+
+    <!-- How the game works — tiny, friendly -->
+    <div id="how-strip">
+      <span>👁 listen first</span>
+      <span>→</span>
+      <span>👆 tap when you feel it</span>
+      <span>→</span>
+      <span>🔥 stop thinking</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="app">
+
+  <div id="background">
+    <div id="vignette"></div>
+    <canvas id="particle-canvas"></canvas>
+  </div>
+
+  <!-- HUD — streak + best + pause -->
+  <div id="hud">
+    <div class="hud-stat">
+      <div class="hud-val" id="streak">0</div>
+      <div class="hud-lbl">streak</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-stat">
+      <div class="hud-val" id="best">0</div>
+      <div class="hud-lbl">best</div>
+    </div>
+    <button id="pause-btn" class="hidden" title="Pause (ESC)">⏸</button>
+  </div>
+
+  <!-- Score + mult — top right -->
+  <div id="score-hud">
+    <div id="score-display">0</div>
+    <div id="mult-display"></div>
+  </div>
+
+  <!-- Mode + diff — top center -->
+  <div id="top-center">
+    <div id="mode-tag"></div>
+    <div id="diff-label"></div>
+  </div>
+
+  <!-- Flow bar — left -->
+  <div id="flow-bar-wrap">
+    <div id="flow-label" title="FLOW — the more in sync you are, the more the beat pushes back. high flow = faster tempo, tighter windows.">FLOW</div>
+    <div id="flow-tooltip">hits = faster</div>
+    <div id="flow-track"><div id="flow-fill"></div></div>
+    <div id="flow-pct">0%</div>
+  </div>
+
+  <!-- Live chat — right -->
+  <div id="chat-layer">
+    <div id="chat-title">LIVE</div>
+    <div id="chat"></div>
+  </div>
+
+  <!-- Leaderboard — right -->
+  <div id="leaderboard-layer">
+    <div id="leaderboard-title">SYNC BOARD</div>
+    <div id="leaderboard"></div>
+  </div>
+
+  <!-- Circle -->
+  <div id="game">
+    <div id="center">
+      <div id="ring-outer"></div>
+      <div id="timing-ring"></div>
+      <div id="ring"></div>
+      <div id="circle"></div>
+      <div id="feedback">—</div>
+      <div id="practice-hint"></div>
+    </div>
+  </div>
+
+  <!-- Combo burst -->
+  <div id="combo-burst"></div>
+  <div id="milestone-flash"></div>
+  <div id="message-layer"><div id="message"></div></div>
+
+  <!-- Fact strip -->
+  <div id="fact-strip">
+    <button id="fact-btn" title="New fact">⟳</button>
+    <div id="fact-text">loading...</div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav id="bottom-nav">
+    <button class="nav-btn nav-active" id="nav-play">
+      <span class="nav-icon">◈</span>
+      <span class="nav-label">PLAY</span>
+    </button>
+    <button class="nav-btn" id="nav-records">
+      <span class="nav-icon">◇</span>
+      <span class="nav-label">BESTS</span>
+    </button>
+    <button class="nav-btn" id="nav-settings">
+      <span class="nav-icon">⚙</span>
+      <span class="nav-label">SETTINGS</span>
+    </button>
+  </nav>
+
+  <!-- Panels -->
+  <div id="panel-wrap" class="hidden panel-animate">
+
+    <div id="panel-records" class="panel hidden">
+      <div class="panel-header">your bests</div>
+      <div class="panel-body" id="records-body"></div>
+      <div id="run-history-wrap" class="hidden">
+        <div class="panel-header">recent runs</div>
+        <div class="panel-body" id="run-history-body"></div>
+      </div>
+    </div>
+
+    <div id="panel-settings" class="panel hidden">
+      <div class="panel-header">settings</div>
+      <div class="panel-body">
+
+        <div class="settings-section">
+          <div class="settings-label">volume</div>
+          <div id="volume-row">
+            <button id="mute-btn" title="Toggle mute">🔊</button>
+            <input id="volume-slider" type="range" min="0" max="100" value="88" step="1"/>
+            <span id="volume-val">88%</span>
+          </div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-section">
+          <div class="settings-label">accessibility</div>
+          <label class="toggle-row" id="hc-toggle-row">
+            <span>high contrast mode</span>
+            <div class="toggle-switch" id="hc-toggle">
+              <div class="toggle-knob"></div>
+            </div>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-section">
+          <button class="settings-btn" id="btn-replay-tutorial">📖 replay tutorial</button>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-section">
+          <div class="settings-label">keyboard shortcuts</div>
+          <div class="sc-row"><kbd>SPACE</kbd><span>tap the beat</span></div>
+          <div class="sc-row"><kbd>1–4</kbd><span>pick mode</span></div>
+          <div class="sc-row"><kbd>5</kbd><span>practice</span></div>
+          <div class="sc-row"><kbd>6</kbd><span>rhythm challenge</span></div>
+          <div class="sc-row"><kbd>7</kbd><span>daily mode</span></div>
+          <div class="sc-row"><kbd>R</kbd><span>your bests</span></div>
+          <div class="sc-row"><kbd>ESC</kbd><span>close / resume</span></div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-section">
+          <div class="settings-label">about</div>
+          <div class="about-text">ECHO is a browser rhythm game. no libraries. just timing.</div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <button class="settings-btn settings-btn-danger" id="settings-clear">🗑 clear all records</button>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Paused overlay -->
+  <div id="paused-overlay" class="hidden">
+    <div id="paused-inner">
+      <div id="paused-title">PAUSED</div>
+      <div id="paused-sub">press ESC or tap to resume</div>
+      <button id="paused-resume-btn">▶ resume</button>
+    </div>
+  </div>
+
+  <!-- New personal best banner -->
+  <div id="new-best-banner" class="hidden">
+    <span>🔥</span>
+    <span id="new-best-text">NEW BEST</span>
+    <span>🔥</span>
+  </div>
+
+  <!-- End screen -->
+  <div id="end-screen" class="hidden">
+    <div id="end-content">
+
+      <div id="end-badge-row">
+        <div id="end-mode-badge"></div>
+        <button id="share-card-btn">share 📤</button>
+      </div>
+
+      <div id="end-title">out of sync.</div>
+      <div id="end-sub">the beat doesn't wait.</div>
+
+      <div id="end-bigstats">
+        <div class="end-big">
+          <div class="end-big-val" id="end-streak-val">0</div>
+          <div class="end-big-lbl">best streak</div>
+        </div>
+        <div class="end-big-divider"></div>
+        <div class="end-big">
+          <div class="end-big-val" id="end-score-val">0</div>
+          <div class="end-big-lbl">score</div>
+        </div>
+        <div class="end-big-divider"></div>
+        <div class="end-big">
+          <div class="end-big-val" id="end-acc-val">–</div>
+          <div class="end-big-lbl">accuracy</div>
+        </div>
+      </div>
+
+      <!-- Streak graph -->
+      <div id="streak-graph"></div>
+
+      <!-- Accuracy waveform -->
+      <div id="replay-graph"></div>
+
+      <!-- Name + submit -->
+      <div id="lb-submit-wrap">
+        <div id="lb-input-row">
+          <input id="lb-name-input" type="text" maxlength="24"
+            placeholder="your name to post score" autocomplete="off" spellcheck="false"/>
+          <button id="lb-submit-btn">post →</button>
+        </div>
+        <div id="lb-submit-status"></div>
+      </div>
+
+      <!-- Top scores -->
+      <div id="lb-online-wrap">
+        <div class="lb-header-row">
+          <span class="lb-title">🏆 top scores</span>
+          <div class="lb-tabs">
+            <button class="lb-tab lb-tab-active" data-tab="all">everyone</button>
+            <button class="lb-tab" data-tab="mode">this mode</button>
+          </div>
+        </div>
+        <div id="lb-online-list"><div class="lb-empty">loading scores...</div></div>
+      </div>
+
+      <!-- Daily share -->
+      <div id="daily-share-wrap" class="hidden">
+        <button id="daily-share-btn">📋 copy today's result</button>
+      </div>
+
+      <div id="end-actions">
+        <button id="retry-btn">try again</button>
+        <button id="change-mode-btn">change mode</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Countdown -->
+  <div id="countdown-overlay" class="hidden">3</div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container"></div>
+
+  <!-- Taunt overlay (Fix #1: must exist in DOM for correct z-index stacking) -->
+  <div id="taunt-overlay" class="hidden"></div>
+
+  <!-- Unlock banner + hint (Fix #3: must exist in DOM for correct stacking order) -->
+  <div id="unlock-banner" style="display:none"></div>
+  <div id="unlock-hint" style="display:none"></div>
+
+  <!-- Audio failed banner (Fix #6: shown when AudioContext init fails on mobile) -->
+  <div id="audio-failed-banner" class="hidden">no audio — tap again if silent</div>
+
+</div><!-- /#app -->
+
+<!-- Rhythm challenge -->
+<div id="rhythm-challenge" class="hidden">
+  <div id="rc-inner">
+    <div id="rc-title">RHYTHM CHALLENGE</div>
+    <div id="rc-sub">watch the pattern — then copy it</div>
+    <div id="rc-grid"></div>
+    <div id="rc-feedback"></div>
+    <div id="rc-stats">
+      <span id="rc-strikes">○○○</span>
+      <span id="rc-hits">hits: 0</span>
+    </div>
+    <div id="rc-result" class="hidden">
+      <div id="rc-result-title"></div>
+      <div id="rc-result-sub"></div>
+      <button id="rc-result-btn">continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial overlay -->
+<div id="tutorial-overlay" class="hidden">
+  <div id="tut-backdrop"></div>
+  <div id="tut-card">
+    <div id="tut-header">
+      <span id="tut-step-num">1 / 9</span>
+      <button id="tut-skip">skip</button>
+    </div>
+    <div id="tut-demo"></div>
+    <div id="tut-title"></div>
+    <div id="tut-body"></div>
+    <div id="tut-footer">
+      <div id="tut-progress"></div>
+      <button id="tut-next">got it →</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="src/main.js"></script>
+
+<!-- Particle background init moved to particles.js -->
+
+<script>
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  }
+</script>
+</body>
+</html>
