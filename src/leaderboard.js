@@ -78,14 +78,19 @@ export async function submitScore({ name, streak, score, accuracy, mode, daily =
 
 // ── Fetch top N scores ────────────────────────────────────────
 export async function fetchTopScores({ mode = null, limit = 10, daily = false } = {}) {
-    let path = `${TABLE}?select=name,streak,score,accuracy,mode,played_at&order=score.desc&limit=${limit}`;
-    if (mode)  path += `&mode=eq.${mode}`;
-    if (daily) path += `&daily=eq.true`;
-    const res = await _query(path, { method: "GET" });
+    const params = new URLSearchParams({
+        select: "name,streak,score,accuracy,mode,played_at",
+        order:  "score.desc",
+        limit:  String(limit),
+    });
+    if (mode)  params.append("mode",  `eq.${mode}`);
+    if (daily) params.append("daily", "eq.true");
+
+    const res = await _query(`${TABLE}?${params.toString()}`, { method: "GET" });
+    console.log("[leaderboard] fetchTopScores result:", res);
     _cachedTop = res.ok && res.data ? res.data : [];
     return _cachedTop;
 }
-
 // ── Render leaderboard into an element ───────────────────────
 export function renderOnlineBoard(container, scores, currentName = "") {
     if (!container) return;
