@@ -372,17 +372,22 @@ function _launch() {
 function _startWithCountdown() {
     _initGameState();
     if (!countdownEl) { _launch(); return; }
+
+    // Get the mode's base interval so countdown pulses at game tempo
+    const mode = getMode();
+    const beatInterval = isPracticeMode() ? 1100 : Math.max(mode.baseInterval || 800, 500);
     const steps = ["3","2","1","GO"];
     let i = 0;
     countdownEl.classList.remove("hidden");
+
     function tick() {
         countdownEl.innerText = steps[i];
         countdownEl.classList.remove("countdown-pop");
-        void countdownEl.offsetWidth;
+        void countdownEl.offsetWidth; // force reflow for animation restart
         countdownEl.classList.add("countdown-pop");
         i++;
-        if (i < steps.length) setTimeout(tick, 800);
-        else setTimeout(() => { countdownEl.classList.add("hidden"); _launch(); }, 600);
+        if (i < steps.length) setTimeout(tick, beatInterval);
+        else setTimeout(() => { countdownEl.classList.add("hidden"); _launch(); }, Math.min(beatInterval * 0.75, 600));
     }
     tick();
 }
@@ -451,25 +456,49 @@ function _onGameEnd(result, best, accuracy, score) {
 
 // ── End screen handlers ───────────────────────────────────────
 function _initEndScreenHandlers() {
+    // Mobile keyboard fix: scroll input into view when keyboard pops up
+    const nameInput = document.getElementById("lb-name-input");
+    if (nameInput) {
+        nameInput.setAttribute("inputmode", "text");
+        nameInput.setAttribute("autocapitalize", "off");
+        nameInput.setAttribute("autocorrect", "off");
+        nameInput.addEventListener("focus", () => {
+            // Small delay lets keyboard fully open before we scroll
+            setTimeout(() => {
+                nameInput.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 320);
+        });
+    }
+
     document.getElementById("lb-submit-btn")?.addEventListener("click", async () => {
-        const nameInput = document.getElementById("lb-name-input");
+        const nameInput2 = document.getElementById("lb-name-input");
         const status    = document.getElementById("lb-submit-status");
         const btn       = document.getElementById("lb-submit-btn");
-        const name      = nameInput?.value?.trim();
+        const name      = nameInput2?.value?.trim();
         if (!name) { if (status) status.innerText = "enter a name first"; return; }
         localStorage.setItem("echo_lb_name", name);
         if (status) status.innerText = "submitting...";
         btn.disabled = true;
         const s  = getState();
-        const ok = await submitScore({
+        const result = await submitScore({
             name, streak: s.best, score: s.score,
             accuracy: s.totalClicks
                 ? Math.floor((s.correctClicks/s.totalClicks)*100)+"%"
                 : "0%",
             mode: getMode().id, daily: _isDaily,
         });
-        if (status) status.innerText = ok ? "✓ posted!" : "queued — will post when online";
-        if (ok) { _refreshBoard(null); toast("score posted! 🎉"); }
+        if (result && result.ok) {
+            if (status) status.innerText = "✓ posted!";
+            _refreshBoard(null);
+            toast("score posted! 🎉");
+        } else if (result && result.isRLS) {
+            if (status) status.innerText = "⚠ RLS blocked — enable insert/select in Supabase policies";
+        } else if (result && result.status === 404) {
+            if (status) status.innerText = "⚠ table not found — check Supabase table name";
+        } else {
+            if (status) status.innerText = "queued — will retry when online";
+        }
+        btn.disabled = false;
     });
 
     document.querySelectorAll(".lb-tab").forEach(tab => {
@@ -608,12 +637,9 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ── Pointer tracking ──────────────────────────────────────────
-document.addEventListener("mousedown",  e => setLastPointer(e.clientX, e.clientY));
-document.addEventListener("touchstart", e => {
-    const t = e.touches[0]; if (t) setLastPointer(t.clientX, t.clientY);
-}, { passive:true });
+document.addEventListener("pointerdown", e => setLastPointer(e.clientX, e.clientY));
 
-// ── Input ─────────────────────────────────────────────────────
+// ── Input — use pointerdown for ZERO touch delay (no 300ms lag) ───────────
 const BLOCKED =
     "#retry-btn,#audio-overlay,#mode-screen,#end-screen,#bottom-nav," +
     "#fact-strip,#panel-wrap,#change-mode-btn,#countdown-overlay," +
@@ -622,6 +648,10 @@ const BLOCKED =
     "#paused-overlay,#new-best-banner";
 
 function _onInput(e) {
+    // On touch devices pointerdown fires; on desktop we also want click for keyboard users
+    // Prevent double-fire: if pointerdown already handled, skip the click event
+    if (e.type === "click" && e.pointerType !== undefined && e.pointerType !== "") return;
+
     if (isTutorialActive()) {
         if (e.target?.closest?.("#tut-backdrop")) tutorialNext();
         return;
@@ -637,8 +667,10 @@ function _onInput(e) {
     handleClick(true);
 }
 
-document.addEventListener("click",      _onInput);
-document.addEventListener("touchstart", _onInput, { passive:true });
+// pointerdown = instant on touch (no 300ms delay) + works for mouse too
+document.addEventListener("pointerdown", _onInput);
+// Keep click for keyboard/accessibility, but _onInput filters duplicates above
+document.addEventListener("click", _onInput);
 
 // ── Keyboard ──────────────────────────────────────────────────
 document.addEventListener("keydown", e => {

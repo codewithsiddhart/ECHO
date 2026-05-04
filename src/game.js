@@ -158,6 +158,8 @@ export function resetState() {
     applySkin(circle, ring, ringOuter);
     initIdle();
     circle?.classList.add("circle-invite");
+    // Reset flow tier ring color
+    if (_center) _center.dataset.flow = "0";
 }
 
 // ── Pause / Resume ────────────────────────────────────────────
@@ -320,6 +322,9 @@ function perfectHit(diff) {
     if (multiplier > 1 && combo === MULT_COMBOS[multiplier]) showMultiplierChange(multiplier);
     if (streak > 0 && streak % 5 === 0) { showCombo(streak); playStreakBell(streak); }
     if (streak === 5 || streak === 10 || streak === 15) showMilestone(streak);
+    // Milestone burst particles at big streaks
+    if (streak === 10 || streak === 25 || streak === 50) _milestoneFullBurst(streak);
+    _updateFlowRingTier();
     if (_isPractice) showPracticeHint(diff, "perfect");
 }
 
@@ -336,6 +341,7 @@ function goodHit(diff) {
     replayRecord("good", diff);
     const { score, multiplier } = scoreHit("good");
     showScore(score, multiplier);
+    _updateFlowRingTier();
     if (_isPractice) showPracticeHint(diff, "good");
 }
 
@@ -352,9 +358,77 @@ function missHit(diff) {
     replayRecord("miss", diff);
     scoreMiss();
     showScore(getScore(), 1);
+    _updateFlowRingTier();
     if (_isPractice) showPracticeHint(diff, "miss");
 }
 
+// ── Flow tier ring coloring ────────────────────────────────────
+const _center = document.getElementById("center");
+function _updateFlowRingTier() {
+    if (!_center) return;
+    // Map flowState (0–100) to 5 visual tiers: 0=none, 1=cyan, 2=blue, 3=orange, 4=pink, 5=white
+    let tier = 0;
+    if      (flowState >= 90) tier = 5;
+    else if (flowState >= 70) tier = 4;
+    else if (flowState >= 50) tier = 3;
+    else if (flowState >= 30) tier = 2;
+    else if (flowState >= 10) tier = 1;
+    _center.dataset.flow = tier;
+}
+
+// ── Milestone full-screen burst ───────────────────────────────
+function _milestoneFullBurst(streakCount) {
+    // Fire a much larger particle burst at key streaks
+    const colors10 = ["#00ffe0","#00ccff","#ffffff","#80fff0","#00ffe0","#aaffee"];
+    const colors25 = ["#ff8800","#ffaa00","#ffcc00","#ff6600","#ffffff","#ffaa44"];
+    const colors50 = ["#ff2d78","#ff69b4","#ffffff","#cc0066","#ff99cc","#ffaaff"];
+    const colors = streakCount >= 50 ? colors50 : streakCount >= 25 ? colors25 : colors10;
+    const count = streakCount >= 50 ? 40 : streakCount >= 25 ? 28 : 18;
+
+    // Burst from center with wide spread
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const layer = document.getElementById("particle-burst-layer") || document.body;
+
+    for (let i = 0; i < count; i++) {
+        const el = document.createElement("div");
+        const ang  = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+        const dist = 80 + Math.random() * (streakCount >= 25 ? 200 : 130);
+        const size = 4 + Math.random() * 7;
+        const col  = colors[Math.floor(Math.random() * colors.length)];
+        const dur  = 600 + Math.random() * 500;
+        el.style.cssText = `
+            position:fixed; border-radius:50%; pointer-events:none;
+            will-change:transform,opacity; z-index:55;
+            left:${cx}px; top:${cy}px;
+            width:${size}px; height:${size}px;
+            background:${col};
+            box-shadow:0 0 ${size*3}px ${col};
+            transform:translate(-50%,-50%);
+            opacity:1; transition:none;
+        `;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => {
+            el.style.transition = `transform ${dur}ms cubic-bezier(0.05,0.8,0.2,1), opacity ${dur*0.7}ms ease-out ${dur*0.3}ms`;
+            el.style.transform  = `translate(calc(-50% + ${Math.cos(ang)*dist}px), calc(-50% + ${Math.sin(ang)*dist}px)) scale(0.05)`;
+            el.style.opacity    = "0";
+        });
+        setTimeout(() => el.remove(), dur + 50);
+    }
+
+    // Flash the viewport background briefly
+    const flash = document.createElement("div");
+    flash.style.cssText = `
+        position:fixed; inset:0; pointer-events:none; z-index:54;
+        background:${streakCount >= 50 ? "rgba(255,45,120,0.15)" : streakCount >= 25 ? "rgba(255,140,0,0.12)" : "rgba(0,255,200,0.1)"};
+        animation: none; transition: opacity 0.6s ease;
+    `;
+    document.body.appendChild(flash);
+    requestAnimationFrame(() => { flash.style.opacity = "0"; });
+    setTimeout(() => flash.remove(), 700);
+}
+
+// ── Hit flash ─────────────────────────────────────────────────
 function flashCircle(cls) {
     circle.classList.remove("hit-perfect", "hit-good", "hit-miss");
     circle.classList.add(cls);

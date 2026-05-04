@@ -1,4 +1,4 @@
-//leaderboard.js — Supabase online leaderboard
+// leaderboard.js — Supabase online leaderboard
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 

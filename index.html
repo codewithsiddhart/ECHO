@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>ECHO</title>
   <meta name="theme-color" content="#04060a">
   <meta name="description" content="A rhythm that learns you... then betrays you.">
@@ -208,12 +208,12 @@
   </div>
 
   <!-- Circle -->
-  <div id="game">
-    <div id="center">
+  <div id="game" style="touch-action:none;">
+    <div id="center" data-flow="0">
       <div id="ring-outer"></div>
       <div id="timing-ring"></div>
       <div id="ring"></div>
-      <div id="circle"></div>
+      <div id="circle" style="touch-action:none;"></div>
       <div id="feedback">—</div>
       <div id="practice-hint"></div>
     </div>
