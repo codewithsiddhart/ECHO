@@ -13,9 +13,7 @@ const STEPS = [
     {
         id: "welcome",
         title: "before we start — one thing.",
-        body: "Watch the ring shrink toward the circle. Tap when it lands. That's the whole game.
-
-Start on EASY — everything is slow enough to see clearly.
+        body: "Watch the ring shrink toward the circle. Tap when it lands. That's the whole game.\n\nStart on EASY — everything is slow enough to see clearly.",
         highlight: null,
         demo: null,
         duration: null,
