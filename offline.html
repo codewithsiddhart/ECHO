@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ECHO — offline</title>
+<style>
+  :root { --accent: #00ffe0; --bg: #04060a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; background: var(--bg);
+    color: #fff; font-family: 'Courier New', monospace;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; overflow: hidden;
+  }
+  .wrap { padding: 2rem; max-width: 360px; }
+  .echo-title {
+    font-size: 3.5rem; letter-spacing: 0.4em;
+    color: var(--accent); margin-bottom: 0.25rem;
+    text-shadow: 0 0 40px rgba(0,255,224,0.5);
+    font-weight: 900;
+  }
+  .echo-sub {
+    font-size: 0.65rem; letter-spacing: 0.25em;
+    color: rgba(0,255,224,0.4); margin-bottom: 2.5rem;
+    text-transform: uppercase;
+  }
+  .icon {
+    font-size: 2.5rem; margin-bottom: 1.5rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.92); }
+  }
+  h1 {
+    font-size: 1rem; letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;
+    text-transform: uppercase;
+  }
+  p {
+    font-size: 0.75rem; line-height: 1.9;
+    color: rgba(255,255,255,0.35); margin-bottom: 2rem;
+  }
+  p strong { color: rgba(0,255,224,0.6); font-weight: normal; }
+  button {
+    background: transparent; border: 1px solid var(--accent);
+    color: var(--accent); padding: 0.65rem 1.6rem;
+    font-family: inherit; font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, color 0.2s;
+    margin-bottom: 1rem;
+  }
+  button:hover, button:active {
+    background: var(--accent); color: var(--bg);
+  }
+  .dots { color: rgba(255,255,255,0.1); font-size: 0.6rem; letter-spacing: 0.4em; }
+  .tip {
+    margin-top: 2rem; font-size: 0.65rem;
+    color: rgba(255,255,255,0.2); line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="echo-title">ECHO</div>
+  <div class="echo-sub">a rhythm game that learns you</div>
+  <div class="icon">◎</div>
+  <h1>you're offline</h1>
+  <p>
+    the beat is still there.<br>
+    your connection just dropped.<br><br>
+    <strong>open ECHO in a browser while online</strong><br>
+    to cache the game for offline play.
+  </p>
+  <button onclick="location.reload()">try again</button>
+  <div class="dots">· · ·</div>
+  <div class="tip">
+    once loaded online, ECHO works fully offline.<br>
+    your scores are saved locally — they'll still be there.
+  </div>
+</div>
+</body>
+</html>
