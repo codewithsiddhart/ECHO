@@ -69,7 +69,7 @@ const STEPS = [
     {
         id: "modes",
         title: "four difficulties. one journey.",
-        body: "EASY — slow pace, big timing window. best place to start.\nMEDIUM — tighter windows, faster tempo. you know the basics.\nHARD — fast and unforgiving. stop thinking.\nIMPOSSIBLE — 38ms window. nobody wins this.\n\nStart at EASY. Move up when you're ready.
+        body: "EASY — slow pace, big timing window. best place to start.\nMEDIUM — tighter windows, faster tempo. you know the basics.\nHARD — fast and unforgiving. stop thinking.\nIMPOSSIBLE — 38ms window. nobody wins this.\n\nStart at EASY. Move up when you're ready.",
         highlight: null,
         demo: null,
         duration: null,
